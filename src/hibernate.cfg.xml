@@ -31,7 +31,7 @@
       </property>
       
       <property name="hibernate.hbm2ddl.auto">
-          create
+          validate
       </property>
   
       <!-- Echo all executed SQL to sysout -->
