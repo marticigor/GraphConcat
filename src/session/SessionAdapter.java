@@ -55,55 +55,38 @@ public class SessionAdapter {
      * @return
      */
 	public List<NmbShotsEntity> loadNmbShotsEntities(){
-		/*
-		Transaction tx = null;
-		List<NmbShotsEntity> shots = new ArrayList<NmbShotsEntity>();
-		try {
-	    	session = sf.openSession();
-			tx = session.beginTransaction();
-			
-			//Criteria criteria=session.createCriteria(NmbShotsEntity.class);   
-			//shots = criteria.list(); 
-			
-            CriteriaBuilder builder = session.getCriteriaBuilder();
-            CriteriaQuery<NmbShotsEntity> criteriaQuery = builder.createQuery(NmbShotsEntity.class);
-            criteriaQuery.from(NmbShotsEntity.class);
-            shots = session.createQuery(criteriaQuery).getResultList();
-            
-			tx.commit();
-		} catch (HibernateException e) {
-			if (tx != null) tx.rollback();
-			e.printStackTrace();
-		} finally {
-			session.close();
-		}
-		return shots;
-		*/
-		List <NmbShotsEntity> data = load();
+		List <NmbShotsEntity> data = load(NmbShotsEntity.class);
 		return data;
     }
 	
+	/**
+	 * 
+	 * @return
+	 */
 	public List<NodeEntity> loadNodeEntities(){
-		return null;
+		List <NodeEntity> data = load(NodeEntity.class);
+		return data;
 	}
 	
-	/*
+	/**
 	 * 
+	 * @param cl
+	 * @return
 	 */
-	private <T> List<T> load (T type){
+	private <T> List<T> load ( Class <T> cl){
 		Transaction tx = null;
 		List<T> data = new ArrayList<T>();
 		try {
 	    	session = sf.openSession();
 			tx = session.beginTransaction();
 			
+			//deprecated now
 			//Criteria criteria=session.createCriteria(NmbShotsEntity.class);   
 			//shots = criteria.list(); 
 			
             CriteriaBuilder builder = session.getCriteriaBuilder();
-            @SuppressWarnings("unchecked")
-			CriteriaQuery<T> criteriaQuery = (CriteriaQuery<T>) builder.createQuery(c);
-            criteriaQuery.from(T);
+            CriteriaQuery<T> criteriaQuery = builder.createQuery(cl);
+            criteriaQuery.from(cl);
             data = session.createQuery(criteriaQuery).getResultList();
             
 			tx.commit();
@@ -115,5 +98,4 @@ public class SessionAdapter {
 		}
 		return data;
 	}
-	
 }

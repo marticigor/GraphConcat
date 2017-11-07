@@ -3,6 +3,7 @@ package core;
 import java.util.List;
 
 import entity.NmbShotsEntity;
+import entity.NodeEntity;
 import session.SessionAdapter;
 
 public class App {
@@ -17,8 +18,11 @@ public class App {
 	private void test(){
 		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
 		System.out.println("loadShotsEntity");
-		System.out.println("shots.size() " + shots.size());
+		System.err.println("shots.size() " + shots.size());
 		for (NmbShotsEntity shot : shots) System.out.println(shot.getNmb());
+		List <NodeEntity> nodes = SessionAdapter.getInstance().loadNodeEntities();
+		System.err.println("nodes.size() " + nodes.size());
+		for (NodeEntity ne : nodes) System.out.println(ne);
 	}
 	
 }
