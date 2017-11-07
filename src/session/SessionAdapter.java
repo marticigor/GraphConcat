@@ -16,6 +16,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
 import entity.NmbShotsEntity;
+import entity.NodeEntity;
 
 public class SessionAdapter {
 
@@ -53,7 +54,8 @@ public class SessionAdapter {
      * 
      * @return
      */
-	public List<NmbShotsEntity> loadShotsEntity(){
+	public List<NmbShotsEntity> loadNmbShotsEntities(){
+		/*
 		Transaction tx = null;
 		List<NmbShotsEntity> shots = new ArrayList<NmbShotsEntity>();
 		try {
@@ -76,5 +78,42 @@ public class SessionAdapter {
 			session.close();
 		}
 		return shots;
+		*/
+		List <NmbShotsEntity> data = load();
+		return data;
     }
+	
+	public List<NodeEntity> loadNodeEntities(){
+		return null;
+	}
+	
+	/*
+	 * 
+	 */
+	private <T> List<T> load (T type){
+		Transaction tx = null;
+		List<T> data = new ArrayList<T>();
+		try {
+	    	session = sf.openSession();
+			tx = session.beginTransaction();
+			
+			//Criteria criteria=session.createCriteria(NmbShotsEntity.class);   
+			//shots = criteria.list(); 
+			
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            @SuppressWarnings("unchecked")
+			CriteriaQuery<T> criteriaQuery = (CriteriaQuery<T>) builder.createQuery(c);
+            criteriaQuery.from(T);
+            data = session.createQuery(criteriaQuery).getResultList();
+            
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null) tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return data;
+	}
+	
 }

@@ -15,7 +15,7 @@ public class App {
 	}
 	
 	private void test(){
-		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadShotsEntity();
+		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
 		System.out.println("loadShotsEntity");
 		System.out.println("shots.size() " + shots.size());
 		for (NmbShotsEntity shot : shots) System.out.println(shot.getNmb());
