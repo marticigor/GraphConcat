@@ -8,6 +8,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.HibernateException;
+import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -15,9 +16,11 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
+import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
 
+@SuppressWarnings("deprecation")
 public class SessionAdapter {
 
 	private SessionFactory sf = null;
@@ -89,6 +92,34 @@ public class SessionAdapter {
             criteriaQuery.from(cl);
             data = session.createQuery(criteriaQuery).getResultList();
             
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null) tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+		return data;
+	}
+	
+	/**
+	 * 
+	 * @param shotId
+	 * @return
+	 */
+	public List <NodeEntity> loadNodeEntitiesByShotId(int shotId){
+		Transaction tx = null;
+		List<NodeEntity> data = new ArrayList<NodeEntity>();
+		try {
+	    	session = sf.openSession();
+			tx = session.beginTransaction();
+			
+			String sql = "SELECT * FROM " + DB_names.TABLE_NODES + " WHERE shotId = :shotId";
+			@SuppressWarnings("unchecked")
+			SQLQuery <NodeEntity> query = session.createSQLQuery(sql);
+			query.setParameter("shotId", shotId);
+			data = query.list();
+			
 			tx.commit();
 		} catch (HibernateException e) {
 			if (tx != null) tx.rollback();

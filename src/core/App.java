@@ -12,7 +12,6 @@ public class App {
 		System.out.println(" --------------------- test");
 		App app = new App();
 		app.test();
-
 	}
 	
 	private void test(){
@@ -21,8 +20,10 @@ public class App {
 		System.err.println("shots.size() " + shots.size());
 		for (NmbShotsEntity shot : shots) System.out.println(shot.getNmb());
 		List <NodeEntity> nodes = SessionAdapter.getInstance().loadNodeEntities();
-		System.err.println("nodes.size() " + nodes.size());
+		System.err.println("all nodes.size() " + nodes.size());
 		//for (NodeEntity ne : nodes) System.out.println(ne);
+		List <NodeEntity> nodes1 = SessionAdapter.getInstance().loadNodeEntitiesByShotId(0);
+		System.err.println("nodes1.size() " + nodes1.size());
+		//for (NodeEntity ne : nodes1) System.out.println(ne);
 	}
-	
 }
