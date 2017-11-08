@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -16,7 +17,7 @@ import javax.persistence.Table;
 @Table(name=DB_names.TABLE_NODES)
 public class NodeEntity {
 
-    // finaly I will want this graph format
+    // finally I will want this graph format
     // https://www.dropbox.com/s/8et183ufeskkibi/IMG_20171019_194557.jpg?dl=0
 	
 	// https://stackoverflow.com/questions/21069687/hibernate-auto-create-database
@@ -36,7 +37,7 @@ public class NodeEntity {
     @Column(name = "lat")
 	private double lat;
     
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name=DB_names.TABLE_ADJACENTS)
 	private Set<NodeEntity> adjacents;
 	

@@ -22,7 +22,7 @@ public class App {
 		for (NmbShotsEntity shot : shots) System.out.println(shot.getNmb());
 		List <NodeEntity> nodes = SessionAdapter.getInstance().loadNodeEntities();
 		System.err.println("nodes.size() " + nodes.size());
-		for (NodeEntity ne : nodes) System.out.println(ne);
+		//for (NodeEntity ne : nodes) System.out.println(ne);
 	}
 	
 }
