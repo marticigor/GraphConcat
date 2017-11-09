@@ -2,6 +2,9 @@ package core;
 
 import java.util.List;
 
+import building_blocks.Graph;
+import building_blocks.Tile;
+import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
 import session.SessionAdapter;
@@ -9,12 +12,17 @@ import session.SessionAdapter;
 public class App {
 
 	public static void main (String args[]){
-		System.out.println(" --------------------- test");
+		System.out.println(" --------------------- ");
+		System.out.println(" --------------------- ");
+		System.out.println(" --------------------- ");
+		System.out.println(" --------------------- ");
 		App app = new App();
-		app.test();
+		//app.veryBasicTest();
+		app.compose();
 	}
 	
-	private void test(){
+	@SuppressWarnings("unused")
+	private void veryBasicTest(){
 		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
 		System.out.println("loadShotsEntity");
 		System.err.println("shots.size() " + shots.size());
@@ -26,4 +34,21 @@ public class App {
 		System.err.println("nodes1.size() " + nodes1.size());
 		//for (NodeEntity ne : nodes1) System.out.println(ne);
 	}
+	
+	private void compose(){
+		System.out.println("working with " + DB_names.NAME);
+		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
+		System.out.println("loaded ShotsEntity");
+		int nmbOfShots = shots.get(shots.size() -1 ).getNmb();
+		int maxShotId = nmbOfShots - 1;
+		System.out.println("nmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
+		Graph graph = new Graph();
+		//iterate tiles
+		for (int index = 0; index <= maxShotId; index ++ ){
+			Tile tile = new Tile(index);
+			System.out.println(tile + "  - loaded from DB");
+			graph.buildIn(tile);
+		}
+	}
+	
 }
