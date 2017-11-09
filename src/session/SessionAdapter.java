@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SQLQuery;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -17,7 +16,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
-import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
 
@@ -103,34 +101,26 @@ public class SessionAdapter {
 		return data;
 	}
 	
+	//https://www.tutorialspoint.com/hibernate/hibernate_query_language.htm
 	/**
 	 * 
 	 * @param shotId
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public List <NodeEntity> loadNodeEntitiesByShotId(int shotId){
+	public List <NodeEntity> loadNodeEntitiesByShotId(long shotId){
 		Transaction tx = null;
-		List<NodeEntity> data = new ArrayList<NodeEntity>();
+		List<NodeEntity> data = null;
 		try {
 	    	session = sf.openSession();
 			tx = session.beginTransaction();
-			Query query = session.createQuery("SELECT HIBERNATE HELL");
 			
-			//from Cat where name='Fritz' : hql
-			//https://www.tutorialspoint.com/hibernate/hibernate_query_language.htm
+			String hql = "FROM " + NodeEntity.class.getName() + " WHERE shotId = :shotId";
 			
-			//String sql = "SELECT * FROM " + DB_names.TABLE_NODES + " WHERE shotId = :shotId";
-			//SQLQuery<NodeEntity> query = session.createSQLQuery(sql);//unchecked
-			//query.setParameter("shotId", shotId);
-			//data = (List<NodeEntity>) query.list();
-			
-			//yes returns NodeEntity
-            //CriteriaBuilder builder = session.getCriteriaBuilder();
-            //CriteriaQuery<NodeEntity> criteriaQuery = builder.createQuery(NodeEntity.class);
-            //criteriaQuery.from(NodeEntity.class);
-            //data = session.createQuery(criteriaQuery).getResultList();
-			
+			@SuppressWarnings("unchecked")
+			Query <NodeEntity>  query = session.createQuery(hql);
+			query.setParameter("shotId",shotId);
+			data = query.list();
+
 			tx.commit();
 		} catch (HibernateException e) {
 			if (tx != null) tx.rollback();

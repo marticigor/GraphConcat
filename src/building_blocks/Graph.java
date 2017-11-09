@@ -14,20 +14,19 @@ public class Graph {
      * @param tile
      */
 	public void buildIn(Tile tile){
+		
 		List<NodeEntity> tileData = tile.getData();
 		
-		for (Object o : tileData){
-			System.out.println(o.getClass());
-			System.out.println(o.toString());
-		}
-		
+		long count = 0;
 		for (NodeEntity ne : tileData){
 			if (!dataSet.contains(ne)){
 				dataSet.add(ne);
-				System.out.println(" - not in");
+				System.out.print("put ");
 			} else {
-				System.out.println(" ----------- already in");
+				System.out.print("in ");
 			}
+		count ++;
+		if(count % 50 == 0) System.out.println("\n");
 		}
 	}
 }

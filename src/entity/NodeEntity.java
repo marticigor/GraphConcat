@@ -91,6 +91,7 @@ public class NodeEntity {
 
 	@Override
 	public int hashCode(){
+		//System.out.println("hash");
 		double lonFloored = Math.floor(lon * 100000.0);
 		double latFloored = Math.floor(lat * 100000.0);
 		return Objects.hash(lonFloored, latFloored);
@@ -98,6 +99,7 @@ public class NodeEntity {
 	//OBJECT!!!
 	@Override
 	public boolean equals(Object theOther){
+		//System.out.println("equals");
 	    // self check
 	    if (this == theOther)
 	        return true;

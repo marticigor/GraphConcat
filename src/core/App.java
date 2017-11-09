@@ -46,7 +46,8 @@ public class App {
 		//iterate tiles
 		for (int index = 0; index <= maxShotId; index ++ ){
 			Tile tile = new Tile(index);
-			System.out.println(tile + "  - loaded from DB");
+			System.err.println("INDEX " + index);
+			System.err.println("TILE " + tile.toString());
 			graph.buildIn(tile);
 		}
 	}
