@@ -1,5 +1,6 @@
 package core;
 
+import java.util.HashSet;
 import java.util.List;
 
 import building_blocks.Graph;
@@ -18,21 +19,9 @@ public class App {
 		System.out.println(" --------------------- ");
 		App app = new App();
 		//app.veryBasicTest();
-		app.compose();
-	}
-	
-	@SuppressWarnings("unused")
-	private void veryBasicTest(){
-		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
-		System.out.println("loadShotsEntity");
-		System.err.println("shots.size() " + shots.size());
-		for (NmbShotsEntity shot : shots) System.out.println(shot.getNmb());
-		List <NodeEntity> nodes = SessionAdapter.getInstance().loadNodeEntities();
-		System.err.println("all nodes.size() " + nodes.size());
-		//for (NodeEntity ne : nodes) System.out.println(ne);
-		List <NodeEntity> nodes1 = SessionAdapter.getInstance().loadNodeEntitiesByShotId(0);
-		System.err.println("nodes1.size() " + nodes1.size());
-		//for (NodeEntity ne : nodes1) System.out.println(ne);
+		//app.testHash();
+		app.testEquals();
+		//app.compose();
 	}
 	
 	private void compose(){
@@ -48,8 +37,61 @@ public class App {
 			Tile tile = new Tile(index);
 			System.err.println("INDEX " + index);
 			System.err.println("TILE " + tile.toString());
+			//tile.testDumpData();
 			graph.buildIn(tile);
 		}
+	}
+	
+	@SuppressWarnings("unused")
+	private void testHash(){
+		//public NodeEntity(long shotId, double lon, double lat, Set <NodeEntity> adjacents )
+		NodeEntity a = new NodeEntity(0,50.1234567891,14.12345678921, new HashSet<NodeEntity>());
+		NodeEntity b = new NodeEntity(0,50.1234567891,14.12345678921, new HashSet<NodeEntity>());
+		System.out.println(a.hashCode() + " - " + b.hashCode());
+		System.out.println(a.equals(b) + " - " +b.equals(a));
+		System.out.println(a == b);
+		HashSet <NodeEntity> test = new HashSet<NodeEntity>();
+		test.add(a);
+		System.out.println("set contains a already in " + test.contains(a));
+		System.out.println("set contains b which equals a " + test.contains(b));
+		
+	}
+	
+	@SuppressWarnings("unused")
+	private void testEquals(){
+		System.out.println("test equals");
+		Tile tile1 = new Tile(0);
+		System.out.println("tile1 returned");
+		tile1.testDumpData();
+		Tile tile2 = new Tile(1);
+		System.out.println("tile2 returned");
+		tile2.testDumpData();
+		System.out.println("sizes " + tile1.getSize() + " " + tile2.getSize());
+		int overlap = 0;
+		for (NodeEntity ne1 : tile1.getData()){
+			for (NodeEntity ne2 : tile2.getData()){
+				if(ne1.equals(ne2)){
+					overlap ++;
+					System.out.println("EQUALITY");
+					System.out.println(ne1 + "\nEQUALS\n" + ne2);
+				}
+			}
+		}
+		System.out.println("overlap " + overlap);
+	}
+	
+	@SuppressWarnings("unused")
+	private void veryBasicTest(){
+		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
+		System.out.println("loadShotsEntity");
+		System.err.println("shots.size() " + shots.size());
+		for (NmbShotsEntity shot : shots) System.out.println(shot.getNmb());
+		List <NodeEntity> nodes = SessionAdapter.getInstance().loadNodeEntities();
+		System.err.println("all nodes.size() " + nodes.size());
+		//for (NodeEntity ne : nodes) System.out.println(ne);
+		List <NodeEntity> nodes1 = SessionAdapter.getInstance().loadNodeEntitiesByShotId(0);
+		System.err.println("nodes1.size() " + nodes1.size());
+		for (NodeEntity ne : nodes1) System.out.println(ne);
 	}
 	
 }

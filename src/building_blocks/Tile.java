@@ -19,8 +19,15 @@ public class Tile {
 		return data;
 	}
 	
+	public int getSize(){
+		return data.size();
+	}
+	
 	@Override
 	public String toString(){
 		return "tile by shotId: " + shotId + " |size: " + data.size(); 
+	}
+	public void testDumpData(){
+		for (NodeEntity ne : data) System.out.println(ne);
 	}
 }

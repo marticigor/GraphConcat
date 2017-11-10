@@ -42,7 +42,8 @@ public class NodeEntity {
 	private Set<NodeEntity> adjacents;
 	
     //INVARIANT, see hashCode();
-    private static final transient double EPSILON = 0.000000001;
+    private static final transient double EPSILON = 0.00001;
+    public static final transient double MULTIPLICATIVE = 10000.0;
 	
 	public NodeEntity (){}
 	
@@ -91,15 +92,15 @@ public class NodeEntity {
 
 	@Override
 	public int hashCode(){
-		//System.out.println("hash");
-		double lonFloored = Math.floor(lon * 100000.0);
-		double latFloored = Math.floor(lat * 100000.0);
+		//System.out.println("hash call");
+		double lonFloored = Math.floor(lon * MULTIPLICATIVE);
+		double latFloored = Math.floor(lat * MULTIPLICATIVE);
 		return Objects.hash(lonFloored, latFloored);
 	}
 	//OBJECT!!!
 	@Override
 	public boolean equals(Object theOther){
-		//System.out.println("equals");
+		//System.out.println("equals call");
 	    // self check
 	    if (this == theOther)
 	        return true;
@@ -130,6 +131,7 @@ public class NodeEntity {
 	@Override
 	public String toString(){
 		String value = "|id " + id + " |shotId " + shotId +  " |lon " + lon + " |lat " + lat + "\n";
+		value += "hashCode: " + hashCode() + "\n";
 		value += "adjacents:\n"+ adjacents.size() + "\n";
 	    for(NodeEntity n : adjacents){
 	    	if(n == this){
