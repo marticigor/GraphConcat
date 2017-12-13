@@ -15,7 +15,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = DB_names.TABLE_NODES)
-public class NodeEntity {
+public class NodeEntity implements Comparable <NodeEntity>{
 
 	// finaly I will want this graph format
 	// https://www.dropbox.com/s/8et183ufeskkibi/IMG_20171019_194557.jpg?dl=0
@@ -43,6 +43,7 @@ public class NodeEntity {
 	@JoinTable(name = DB_names.TABLE_ADJACENTS)
 	private Set<NodeEntity> adjacents;
 
+	private transient short elev;
 	private static final transient double EPSILON = 0.00000001d;
 
 	public NodeEntity() {
@@ -108,6 +109,20 @@ public class NodeEntity {
 		this.weight = weight;
 	}
 
+	/**
+	 * @return the elev
+	 */
+	public short getElev() {
+		return elev;
+	}
+
+	/**
+	 * @param elev the elev to set
+	 */
+	public void setElev(short elev) {
+		this.elev = elev;
+	}
+
 	public Set<NodeEntity> getAdjacents() {
 		return adjacents;
 	}
@@ -156,7 +171,8 @@ public class NodeEntity {
 	@Override
 	public String toString() {
 		String value = "|id " + id + " |shotId " + shotId + " |lon " + lon + " |lat " + lat + "\n";
-		value += "adjacents:\n" + adjacents.size() + "\n";
+		value += "|weight " + weight + " |elev " + elev;
+		value += "\nadjacents:\n" + adjacents.size() + "\n";
 		for (NodeEntity n : adjacents) {
 			if (n == this) {
 				System.err.println("reference to this in adjacents in NodeEntity.toString()");
@@ -165,5 +181,14 @@ public class NodeEntity {
 			value += (n.getId() + "---------- some NodeEntity\n");
 		}
 		return value;
+	}
+
+	@Override
+	public int compareTo(NodeEntity theOther) {
+		
+		Long myId = new Long(this.id);
+		Long hisId = new Long(theOther.getId());
+		
+		return myId.compareTo(hisId);
 	}
 }

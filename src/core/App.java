@@ -2,6 +2,8 @@ package core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -55,9 +57,14 @@ public class App {
 		System.out.println("FINISHED");
 		System.out.println("raw number " + graph.getRawSize());
 		System.out.println("final number " + graph.getMergedSize());
-		System.out.println("writing: " + PATH + File.pathSeparator + NAME);
+		System.out.println("edgeSize " + graph.getEdgeSize());
+		System.out.println("\n\nwriting: " + PATH + File.separator + NAME);
 		
-		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, graph.getDataSet());
+		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getDataSet());
+		
+		Collections.sort(listedDataSet);
+		
+		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph);
 		try {
 			wof.write();
 		} catch (IOException e) {

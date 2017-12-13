@@ -12,6 +12,7 @@ public class Graph {
     private Set <NodeEntity> dataSet = new HashSet<NodeEntity>();
     private Map <NodeEntity, Short> entityInToWeight = new HashMap<NodeEntity, Short>(); 
     private int rawSize;
+    private int edgeSize;
     
     /**
      * 
@@ -23,6 +24,7 @@ public class Graph {
 		
 		//long count = 0;
 		short maxWeight, weightIn, weightOut;
+		
 		for (NodeEntity ne : tileData){
 			rawSize ++;
 			if (!dataSet.contains(ne)){
@@ -53,7 +55,8 @@ public class Graph {
 			}
 		//count ++;
 		//if(count % 10 == 0) System.out.println("\n");
-		}
+			edgeSize += ne.getAdjacents().size();
+		}//for
 		//System.out.print("\n");
 		
 		//iterate dataSet and correct weights affected by corner cases
@@ -108,4 +111,10 @@ public class Graph {
 	 * if we call after all work done.
 	 */
 	public int getMergedSize(){return dataSet.size();}
+	
+	/**
+	 * @return
+	 * if we call after all work done.
+	 */
+	public int getEdgeSize(){return edgeSize;}
 }

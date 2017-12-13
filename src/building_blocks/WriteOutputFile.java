@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.util.Set;
+import java.util.List;
 
 import entity.NodeEntity;
 
@@ -13,12 +13,14 @@ public class WriteOutputFile {
 
 	private final static String EXTENSION = ".graph";
 	private String path,name;
-	private Set<NodeEntity> dataSet;
+	private List<NodeEntity> dataSet;
+	private Graph creator;//ask him questions about sizes already computed;
 	
-	public WriteOutputFile(String thePath, String theName, Set<NodeEntity> theDataSet){
+	public WriteOutputFile(String thePath, String theName, List <NodeEntity> theDataSet, Graph theCreator){
 		this.path = thePath;
 		this.name = theName;
 		this.dataSet = theDataSet;
+		this.creator = theCreator;
 	}
 	
 	public void write() throws IOException{
