@@ -25,7 +25,7 @@ public class App {
 	}
 	/**
 	 * 
-	 * 
+	 * TODO do not forget to normaize edge weights (corner case)
 	 */
 	private void compose(){
 		System.out.println("working with " + DB_names.NAME);
@@ -38,12 +38,31 @@ public class App {
 		//iterate tiles
 		for (int shot = 0; shot <= maxShotId; shot ++ ){
 			Tile tile = new Tile(shot);
+			System.out.println("-------------------------------");
 			System.err.println("SHOT " + shot);
 			System.err.println("TILE " + tile.toString());
+			System.out.println("-------------------------------");
 			//tile.testDumpData();
 			graph.buildIn(tile);
 		}
+		System.out.println("FINISHED");
+		System.out.println("raw number " + graph.getRawSize());//528361
+		System.out.println("final number " + graph.getMergedSize());
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	@SuppressWarnings("unused")
 	private void testHash(){
