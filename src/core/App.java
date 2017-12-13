@@ -1,10 +1,13 @@
 package core;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 
 import building_blocks.Graph;
 import building_blocks.Tile;
+import building_blocks.WriteOutputFile;
 import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
@@ -12,6 +15,9 @@ import session.SessionAdapter;
 
 public class App {
 
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
+	private final static String NAME = "test1";
+	
 	public static void main (String args[]){
 		System.out.println(" --------------------- ");
 		System.out.println(" --------------------- ");
@@ -25,7 +31,7 @@ public class App {
 	}
 	/**
 	 * 
-	 * TODO do not forget to normaize edge weights (corner case)
+	 *
 	 */
 	private void compose(){
 		System.out.println("working with " + DB_names.NAME);
@@ -45,9 +51,20 @@ public class App {
 			//tile.testDumpData();
 			graph.buildIn(tile);
 		}
+		
 		System.out.println("FINISHED");
-		System.out.println("raw number " + graph.getRawSize());//528361
+		System.out.println("raw number " + graph.getRawSize());
 		System.out.println("final number " + graph.getMergedSize());
+		System.out.println("writing: " + PATH + File.pathSeparator + NAME);
+		
+		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, graph.getDataSet());
+		try {
+			wof.write();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("write");
+		}
+		System.out.println("FINISHED");
 	}
 	
 	
@@ -67,8 +84,8 @@ public class App {
 	@SuppressWarnings("unused")
 	private void testHash(){
 		//public NodeEntity(long shotId, double lon, double lat, Set <NodeEntity> adjacents )
-		NodeEntity a = new NodeEntity(0,50.1234567891,14.12345678921, new HashSet<NodeEntity>());
-		NodeEntity b = new NodeEntity(0,50.1234567891,14.12345678921, new HashSet<NodeEntity>());
+		NodeEntity a = new NodeEntity(0,50.1234567891,14.12345678921,(short) -1, new HashSet<NodeEntity>());
+		NodeEntity b = new NodeEntity(0,50.1234567891,14.12345678921,(short) -1, new HashSet<NodeEntity>());
 		System.out.println(a.hashCode() + " - " + b.hashCode());
 		System.out.println(a.equals(b) + " - " +b.equals(a));
 		System.out.println(a == b);
