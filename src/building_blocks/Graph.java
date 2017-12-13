@@ -21,12 +21,13 @@ public class Graph {
 		for (NodeEntity ne : tileData){
 			if (!dataSet.contains(ne)){
 				dataSet.add(ne);
-				System.out.print("put ");
+				System.out.print("|put");
 			} else {
-				System.out.print("in ");
+				System.out.print("|in already");
 			}
 		count ++;
-		if(count % 50 == 0) System.out.println("\n");
+		if(count % 10 == 0) System.out.println("\n");
 		}
+		System.out.print("\n");
 	}
 }

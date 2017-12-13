@@ -20,10 +20,13 @@ public class App {
 		App app = new App();
 		//app.veryBasicTest();
 		//app.testHash();
-		app.testEquals();
-		//app.compose();
+		//app.testEquals();
+		app.compose();
 	}
-	
+	/**
+	 * 
+	 * 
+	 */
 	private void compose(){
 		System.out.println("working with " + DB_names.NAME);
 		List <NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
@@ -33,9 +36,9 @@ public class App {
 		System.out.println("nmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
 		Graph graph = new Graph();
 		//iterate tiles
-		for (int index = 0; index <= maxShotId; index ++ ){
-			Tile tile = new Tile(index);
-			System.err.println("INDEX " + index);
+		for (int shot = 0; shot <= maxShotId; shot ++ ){
+			Tile tile = new Tile(shot);
+			System.err.println("SHOT " + shot);
 			System.err.println("TILE " + tile.toString());
 			//tile.testDumpData();
 			graph.buildIn(tile);
