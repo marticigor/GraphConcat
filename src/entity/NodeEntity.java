@@ -44,7 +44,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	private Set<NodeEntity> adjacents;
 
 	private transient short elev;
-	private static final transient double EPSILON = 0.00000001d;
+	private static final transient double EPSILON = 0.00000001d;//0.00000001d;
 
 	public NodeEntity() {
 	}
@@ -133,7 +133,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * 100000.0);
+		double lonFloored = Math.floor(lon * 100000.0);//100000.0
 		double latFloored = Math.floor(lat * 100000.0);
 		return Objects.hash(lonFloored, latFloored);
 	}
@@ -170,17 +170,29 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public String toString() {
-		String value = "|id " + id + " |shotId " + shotId + " |lon " + lon + " |lat " + lat + "\n";
-		value += "|weight " + weight + " |elev " + elev;
-		value += "\nadjacents:\n" + adjacents.size() + "\n";
+		StringBuilder sb  = new StringBuilder();
+		sb.append("\nN O D E    E N T I T Y\n");
+		sb.append("|id ").append(id).append(" |shotId ").append(shotId).append(" |lon ").append(lon)
+		.append(" |lat ").append(lat).append("\n");
+		sb.append("|weight ").append(weight).append(" |elev ").append(elev);
+		sb.append("\n|hashCode(): ").append(hashCode());
+		sb.append("\n\tadjacents:").append(adjacents.size()).append("\n");
+		
 		for (NodeEntity n : adjacents) {
 			if (n == this) {
 				System.err.println("reference to this in adjacents in NodeEntity.toString()");
 				continue;
 			}
-			value += (n.getId() + "---------- some NodeEntity\n");
+			sb.append("\n\t" + n.getId() + "---------------------------------");
+			sb.append("\n\thash: ").append(n.hashCode());
+			sb.append("\n\tshot: ").append(n.getShotId());
+			sb.append("\n\tlat: ").append(n.getLat());
+			sb.append("\n\tlon:").append(n.getLon());
+			sb.append("\n\tweight: ").append(n.getWeight());
+			sb.append("\n\telev: ").append(n.getElev());
+			
 		}
-		return value;
+		return sb.toString();
 	}
 
 	@Override
