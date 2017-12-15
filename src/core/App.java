@@ -43,7 +43,6 @@ public class App {
 
 	/**
 	 * 
-	 *
 	 */
 	private void compose() {
 		System.out.println("working with " + DB_names.NAME);
@@ -56,26 +55,17 @@ public class App {
 		// iterate tiles
 		for (int shot = 0; shot <= maxShotId; shot++) {
 			Tile tile = new Tile(shot);
-			System.out.println("---------------------------------------------------");
-			System.err.println("SHOT " + shot);
-			System.err.println("TILE " + tile.toString());
-			System.out.println("---------------------------------------------------");
-			// tile.testDumpData();
+			printTileInfo(tile, shot);
 			graph.buildIn(tile);
 		}
 
-		System.out.println("FINISHED");
-		System.out.println("raw number " + graph.getRawSize());
-		System.out.println("final number " + graph.getMergedSize());
-		System.out.println("edgeSize before merge " + graph.getEdgeSizeNoMerge());
+		graph.printStats();
 
 		computeBounds(graph);
 		printBounds();
 		visualTest(graph);
-
-		//graph.testDrawComparePlay();
 		graph.testOverlap();
-		
+
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 		Collections.sort(listedDataSet);
 
@@ -90,7 +80,7 @@ public class App {
 	}
 
 	/**
-	 * TODO works globally?
+	 * TODO works globally? No.
 	 */
 	private void visualTest(Graph graph) {
 		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
@@ -115,12 +105,13 @@ public class App {
 		ir.draw();
 
 		try {
-			Thread.sleep(10000);
+			Thread.sleep(4000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			throw new RuntimeException("interupt");
 		}
 
+		/*
 		LineMaker lm = new LineMaker(ir);
 
 		int x1, x2, y1, y2;
@@ -134,6 +125,8 @@ public class App {
 				lm.drawLine(x1, y1, x2, y2, 0, 255, 255);
 			}
 		}
+		*/
+		
 		ir.draw();
 	}
 
@@ -157,7 +150,7 @@ public class App {
 	}
 
 	/**
-	 * TODO works globally?
+	 * TODO works globally? No.
 	 * 
 	 * @param lat
 	 * @return
@@ -168,13 +161,11 @@ public class App {
 		double ratio = overlapLat / deltaLat;
 		int ret = ((int) (ratio * (double) PIC_HEIGHT_MAX_INDEX));
 		assert (ret <= PIC_HEIGHT_MAX_INDEX);
-		// System.out.println("convertLatToPixY, lat " + lat + " returns " +
-		// ret);
 		return ret;
 	}
 
 	/**
-	 * TODO works globally?
+	 * TODO works globally? No.
 	 * 
 	 * @param lat
 	 * @return
@@ -185,8 +176,6 @@ public class App {
 		double ratio = overlapLon / deltaLon;
 		int ret = ((int) (ratio * (double) PIC_WIDTH_MAX_INDEX));
 		assert (ret <= PIC_WIDTH_MAX_INDEX);
-		// System.out.println("convertLonToPixX, lon " + lon + " returns " +
-		// ret);
 		return ret;
 	}
 
@@ -194,7 +183,7 @@ public class App {
 	 * 
 	 */
 	private void printBounds() {
-		System.out.println("----------- BOUNDS:");
+		System.out.println(" --------------------- BOUNDS:");
 		System.out.println("minLat " + minLat);
 		System.out.println("maxLat " + maxLat);
 		System.out.println("minLon " + minLon);
@@ -203,6 +192,9 @@ public class App {
 		System.out.println("deltaLon " + deltaLon);
 	}
 
+	/**
+	 * @param graph
+	 */
 	private void printMergeProblem(Graph graph) {
 		System.out.println("MERGE PROBLEM STATS: --------------------- ");
 		System.out.println("needsMergeFromRight.size() " + graph.getNeedsMergeFromRight().size());
@@ -210,10 +202,20 @@ public class App {
 		System.out.println("because of contains: " + graph.getContainsProblem());
 	}
 
+	/**
+	 * 
+	 * @param tile
+	 * @param shot
+	 */
+	private void printTileInfo(Tile tile, int shot) {
+		System.out.println("=========================================================================");
+		System.err.println("SHOT " + shot);
+		System.err.println("TILE " + tile.toString());
+		System.out.println("=========================================================================");
+	}
+
 	@SuppressWarnings("unused")
 	private void testHash() {
-		// public NodeEntity(long shotId, double lon, double lat, Set
-		// <NodeEntity> adjacents )
 		NodeEntity a = new NodeEntity(0, 50.1234567891, 14.12345678921, (short) -1, new HashSet<NodeEntity>());
 		NodeEntity b = new NodeEntity(0, 50.1234567891, 14.12345678921, (short) -1, new HashSet<NodeEntity>());
 		System.out.println(a.hashCode() + " - " + b.hashCode());
@@ -223,7 +225,6 @@ public class App {
 		test.add(a);
 		System.out.println("set contains a already in " + test.contains(a));
 		System.out.println("set contains b which equals a " + test.contains(b));
-
 	}
 
 	@SuppressWarnings("unused")
@@ -258,7 +259,6 @@ public class App {
 			System.out.println(shot.getNmb());
 		List<NodeEntity> nodes = SessionAdapter.getInstance().loadNodeEntities();
 		System.err.println("all nodes.size() " + nodes.size());
-		// for (NodeEntity ne : nodes) System.out.println(ne);
 		List<NodeEntity> nodes1 = SessionAdapter.getInstance().loadNodeEntitiesByShotId(0);
 		System.err.println("nodes1.size() " + nodes1.size());
 		for (NodeEntity ne : nodes1)

@@ -133,8 +133,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * 100000.0);//100000.0
-		double latFloored = Math.floor(lat * 100000.0);
+		double lonFloored = Math.floor(lon * 10000000.0);//100000.0
+		double latFloored = Math.floor(lat * 10000000.0);
 		return Objects.hash(lonFloored, latFloored);
 	}
 
