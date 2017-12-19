@@ -15,10 +15,13 @@ import lib_duke.Pixel;
 
 public class Graph {
 	private Map<NodeEntity, NodeEntity> retrievableDataSet = new HashMap<NodeEntity, NodeEntity>();
-	private Set<NodeEntity> needsMergeFromRight = new HashSet<NodeEntity>();
+	private Set<NodeEntity> needsMergeFromRight;
 	private int rawSize;
 	private int edgeSizeNoMerge;
+	private int edgeSizeAfterMerge;
 	private int sizeProblem, containsProblem;
+	private int weightUpdated;
+	//TODO memory waste, not always "App.development"
 	private ImageResource visual = new ImageResource(App.PIC_WIDTH_MAX_INDEX + 1, App.PIC_HEIGHT_MAX_INDEX + 1);
 	private LineMaker line = new LineMaker(visual);
 	private App app = new App();
@@ -32,29 +35,51 @@ public class Graph {
 	 */
 	public void buildIn(Tile tile) {
 
-		List<NodeEntity> tileData = tile.getData();
 		int needsMergeThisRound = 0;
-		Set<NodeEntity> left, right;
-
-		for (NodeEntity nodeEntityRight : tileData) {
+		Set<NodeEntity> leftSet, rightSet;
+		NodeEntity nodeEntityLeft;
+		needsMergeFromRight = new HashSet<NodeEntity>();
+		
+		for (NodeEntity nodeEntityRight : tile.getData()) {
 			rawSize++;
+			edgeSizeNoMerge += nodeEntityRight.getAdjacents().size();
+			
 			if (!retrievableDataSet.keySet().contains(nodeEntityRight)) {
 				// PUT IT IN
+			
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
-				edgeSizeNoMerge += nodeEntityRight.getAdjacents().size();
-
+			
 			} else {
 				// IS ALREADY IN
-				matchFound.add(nodeEntityRight);
-				// merge adjacents if they are not identical
-				right = nodeEntityRight.getAdjacents();
-				left = retrievableDataSet.get(nodeEntityRight).getAdjacents();
-				if (!needsMergeFromRight.contains(nodeEntityRight) && !areIdentical(left, right)) {
+				
+				if(App.development) matchFound.add(nodeEntityRight);
+				
+				// MERGE adjacents if they are not identical
+				
+				rightSet = nodeEntityRight.getAdjacents();
+				leftSet = retrievableDataSet.get(nodeEntityRight).getAdjacents();
+				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
+				
+				if (!needsMergeFromRight.contains(nodeEntityRight) &&
+						!areIdentical(leftSet, rightSet) ) {
+					
 					needsMergeFromRight.add(nodeEntityRight);
 					needsMergeThisRound ++;
+					
+					if(App.development) testCompareLeftRightStore(nodeEntityLeft, nodeEntityRight);
+					
+					mergeAdjacentsIntoLeft(nodeEntityLeft, nodeEntityRight);
+					
 				}
-			}
+				//check weight
+				
+				short weightLeft = nodeEntityLeft.getWeight();
+				short weightRight = nodeEntityRight.getWeight();
+				if(weightLeft != weightRight) weightUpdated ++;
+				nodeEntityLeft.setWeight((short) Math.max(weightLeft, weightRight));
+			}			
 		} // for
+		
 		printDataMergeThisRound(needsMergeThisRound);
 		testDatasetIntegrity();
 	}
@@ -80,6 +105,40 @@ public class Graph {
 		return true;
 	}
 
+	/**
+	 * 
+	 * @param left
+	 * @param right
+	 */
+	private void mergeAdjacentsIntoLeft(NodeEntity left, NodeEntity right){
+		
+		if(App.development){
+			System.out.println("================================");
+			System.out.println("================================");
+			System.out.println("ADJACENTS LEFT BEFORE MERGE");
+			printAdj(left);
+			System.out.println("ADJACENTS RIGHT BEFORE MERGE");
+			printAdj(right);
+		}
+		
+		for (NodeEntity rightEntity : right.getAdjacents()){
+			left.getAdjacents().add(rightEntity);
+		}
+		
+		if(App.development){
+			System.out.println("ADJACENTS LEFT AFTER MERGE");
+			printAdj(left);
+		}
+		
+	}
+	
+	/**
+	 * 
+	 */
+	public void computeMergedEdgeSize(){
+		for (NodeEntity node : retrievableDataSet.keySet())
+			edgeSizeAfterMerge += node.getAdjacents().size();
+	}
 	/**
 	 * called regularly
 	 */
@@ -138,6 +197,13 @@ public class Graph {
 	public int getEdgeSizeNoMerge() {
 		return edgeSizeNoMerge;
 	}
+	
+	/**
+	 * @return if we call after all work done.
+	 */
+	public int getEdgeSizeAfterMerge() {
+		return edgeSizeAfterMerge;
+	}
 
 	/**
 	 * @return the sizeProblem
@@ -190,9 +256,23 @@ public class Graph {
 	 */
 	public void printStats(){
 		System.out.println("=========================================================================");
-		System.out.println("RAW number " + this.getRawSize());
-		System.out.println("FINAL number " + this.getMergedSize());
-		System.out.println("\nEdgeSize before merge " + this.getEdgeSizeNoMerge());
+		System.out.println("RAW number of nodes: " + this.getRawSize());
+		System.out.println("FINAL number of nodes: " + this.getMergedSize());
+		System.out.println("EdgeSize before merge: " + this.getEdgeSizeNoMerge());
+		System.out.println("EdgeSize after merge: " + this.getEdgeSizeAfterMerge());
+		System.out.println("Weights updated: " + this.weightUpdated);
+		System.out.println("=========================================================================");
+	}
+	
+	/**
+	 * @param graph
+	 */
+	public void printMergeProblem() {
+		System.out.println("=========================================================================");
+		System.out.println("MERGE PROBLEM STATS: ");
+		System.out.println("needsMergeFromRight.size() " + this.getNeedsMergeFromRight().size());
+		System.out.println("because of size: " + this.getSizeProblem());
+		System.out.println("because of contains: " + this.getContainsProblem());
 		System.out.println("=========================================================================");
 	}
 	
@@ -203,17 +283,21 @@ public class Graph {
 	private void printDataMergeThisRound(int needsMergeThisRound){
 		System.out.println("=========================================================================");
 		System.out.println("Needs merge THIS ROUND: " + needsMergeThisRound);
-		System.out.println("TOTAL needs merge: " + needsMergeFromRight.size());
-		System.out.println("TOTAL EDGE size no merge: " + edgeSizeNoMerge);
 		System.out.println("=========================================================================");
 	} 
 	
 	/**
 	 * 
+	 * @param node
+	 */
+	private void printAdj(NodeEntity node){
+		System.out.println(node.getAdjacents());
+	}
+	/**
+	 * 
 	 * @param left
 	 * @param right
 	 */
-	@SuppressWarnings("unused")
 	private void testCompareLeftRightStore(NodeEntity left, NodeEntity right) {
 		playLeft.add(left);
 		playRight.add(right);
@@ -223,7 +307,7 @@ public class Graph {
 	 * call when graph done
 	 */
 	public void testCompareLeftRightPlay() {
-		app.computeBounds(this);
+		app.computeBoundsOfExistingNodes(this);
 		int size = playLeft.size();
 		int [] reds = new int []{255,0};
 		int [] blues = new int []{0,255};
@@ -253,7 +337,7 @@ public class Graph {
 	 * call when graph done
 	 */
 	public void testOverlap(){
-		app.computeBounds(this);
+		app.computeBoundsOfExistingNodes(this);
 		for(NodeEntity entity : matchFound){
 			Pixel p = visual.getPixel(
 					app.convertLonToPixX(entity.getLon()),

@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import building_blocks.DEMReader;
+import building_blocks.DEMTile;
 import building_blocks.Graph;
 import building_blocks.Tile;
 import building_blocks.WriteOutputFile;
@@ -25,6 +28,8 @@ public class App {
 	// output
 	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
 	private final static String NAME = "test1";
+
+	public final static boolean development = false;
 
 	private double minLon = Double.MAX_VALUE, maxLon = Double.MIN_VALUE, minLat = Double.MAX_VALUE,
 			maxLat = Double.MIN_VALUE;
@@ -45,12 +50,12 @@ public class App {
 	 * 
 	 */
 	private void compose() {
-		System.out.println("working with " + DB_names.NAME);
+		System.out.println("Working with " + DB_names.NAME);
 		List<NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
-		System.out.println("loaded ShotsEntity");
+		System.out.println("Loaded ShotsEntity");
 		int nmbOfShots = shots.get(shots.size() - 1).getNmb();
 		int maxShotId = nmbOfShots - 1;
-		System.out.println("nmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
+		System.out.println("NmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
 		Graph graph = new Graph();
 		// iterate tiles
 		for (int shot = 0; shot <= maxShotId; shot++) {
@@ -59,16 +64,39 @@ public class App {
 			graph.buildIn(tile);
 		}
 
+		graph.computeMergedEdgeSize();
 		graph.printStats();
 
-		computeBounds(graph);
-		printBounds();
-		visualTest(graph);
-		graph.testOverlap();
+		if (development) {
+			computeBoundsOfExistingNodes(graph);
+			visualTest(graph);
+			graph.testOverlap();
+			graph.testCompareLeftRightPlay();
+		}
 
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 		Collections.sort(listedDataSet);
+		
+		//add elev
+		System.out.println("WORKING ON ELEV");
+		DEMReader reader = new DEMReader();
+		Map<NodeEntity, DEMTile> nodeToDEMTile = new HashMap<NodeEntity, DEMTile>();
+		Map<String, DEMTile> nameToDEMTile = new HashMap<String, DEMTile>();
 
+		for(NodeEntity node : listedDataSet){
+			
+			String neededTile = reader.findNameOfTile(node.getLon(), node.getLat());
+			
+			if(nameToDEMTile.keySet().contains(neededTile)){
+				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
+			}else{
+				nameToDEMTile.put(neededTile, new DEMTile(neededTile));
+				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
+			}
+		}
+		System.out.println("tiles needed:");
+		for(String tile : nameToDEMTile.keySet())System.out.println(tile);
+		
 		/*
 		 * System.out.println("\n\nwriting: " + PATH + File.separator + NAME);
 		 * WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet,
@@ -86,10 +114,10 @@ public class App {
 		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
 		Set<NodeEntity> needsMergeFromRight = graph.getNeedsMergeFromRight();
 		if (!(needsMergeFromRight.size() == (graph.getSizeProblem() + graph.getContainsProblem()))) {
-			printMergeProblem(graph);
+			graph.printMergeProblem();
 			System.err.println("Warning: match");
 		} else {
-			printMergeProblem(graph);
+			graph.printMergeProblem();
 		}
 		Pixel current;
 		Map<NodeEntity, NodeEntity> dataSet = graph.getRetrievableDataSet();
@@ -111,7 +139,6 @@ public class App {
 			throw new RuntimeException("interupt");
 		}
 
-		/*
 		LineMaker lm = new LineMaker(ir);
 
 		int x1, x2, y1, y2;
@@ -125,16 +152,15 @@ public class App {
 				lm.drawLine(x1, y1, x2, y2, 0, 255, 255);
 			}
 		}
-		*/
-		
+
 		ir.draw();
 	}
 
 	/**
-	 * 
+	 * these are bounds for visualisation, not map bounds
 	 * @param graph
 	 */
-	public void computeBounds(Graph graph) {
+	public void computeBoundsOfExistingNodes(Graph graph) {
 		Map<NodeEntity, NodeEntity> dataSet = graph.getRetrievableDataSet();
 		double lat, lon;
 		for (NodeEntity ne : dataSet.keySet()) {
@@ -193,23 +219,13 @@ public class App {
 	}
 
 	/**
-	 * @param graph
-	 */
-	private void printMergeProblem(Graph graph) {
-		System.out.println("MERGE PROBLEM STATS: --------------------- ");
-		System.out.println("needsMergeFromRight.size() " + graph.getNeedsMergeFromRight().size());
-		System.out.println("because of size: " + graph.getSizeProblem());
-		System.out.println("because of contains: " + graph.getContainsProblem());
-	}
-
-	/**
 	 * 
 	 * @param tile
 	 * @param shot
 	 */
 	private void printTileInfo(Tile tile, int shot) {
 		System.out.println("=========================================================================");
-		System.err.println("SHOT " + shot);
+		System.err.println("\nSHOT " + shot);
 		System.err.println("TILE " + tile.toString());
 		System.out.println("=========================================================================");
 	}
