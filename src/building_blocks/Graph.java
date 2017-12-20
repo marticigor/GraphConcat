@@ -169,14 +169,6 @@ public class Graph {
 	}
 
 	/**
-	 * 
-	 * @return
-	 */
-	public Set<NodeEntity> getNeedsMergeFromRight() {
-		return needsMergeFromRight;
-	}
-
-	/**
 	 * @return original number of nodes read from DB if we call after all work
 	 *         done.
 	 */
@@ -270,7 +262,7 @@ public class Graph {
 	public void printMergeProblem() {
 		System.out.println("=========================================================================");
 		System.out.println("MERGE PROBLEM STATS: ");
-		System.out.println("needsMergeFromRight.size() " + this.getNeedsMergeFromRight().size());
+		System.out.println("needsMergeFromRight.size() " + this.needsMergeFromRight.size());
 		System.out.println("because of size: " + this.getSizeProblem());
 		System.out.println("because of contains: " + this.getContainsProblem());
 		System.out.println("=========================================================================");

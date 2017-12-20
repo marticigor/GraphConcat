@@ -69,12 +69,13 @@ public class App {
 
 		if (development) {
 			computeBoundsOfExistingNodes(graph);
-			visualTest(graph);
+			visualTest(graph,1000);
 			graph.testOverlap();
 			graph.testCompareLeftRightPlay();
 		}
 
-		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
+		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>();
+		for(NodeEntity ne : graph.getRetrievableDataSet().keySet()) listedDataSet.add(ne);
 		Collections.sort(listedDataSet);
 		
 		//add elev
@@ -84,18 +85,30 @@ public class App {
 		Map<String, DEMTile> nameToDEMTile = new HashMap<String, DEMTile>();
 
 		for(NodeEntity node : listedDataSet){
-			
 			String neededTile = reader.findNameOfTile(node.getLon(), node.getLat());
 			
 			if(nameToDEMTile.keySet().contains(neededTile)){
 				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
 			}else{
-				nameToDEMTile.put(neededTile, new DEMTile(neededTile));
+				nameToDEMTile.put(neededTile, new DEMTile(neededTile, reader));
 				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
 			}
 		}
 		System.out.println("tiles needed:");
 		for(String tile : nameToDEMTile.keySet())System.out.println(tile);
+		System.out.println("reading elevs");
+		short maxElev = Short.MIN_VALUE;
+		short elev;
+		for (NodeEntity node : listedDataSet){
+			DEMTile tile = nodeToDEMTile.get(node);
+			elev = tile.getElev(node.getLat(), node.getLon());
+			if(elev > maxElev) maxElev = elev;
+			node.setElev(elev);
+		}
+		
+		System.out.println("Max elev: " + maxElev);
+		computeBoundsOfExistingNodes(graph);
+		visualTest(graph, maxElev);
 		
 		/*
 		 * System.out.println("\n\nwriting: " + PATH + File.separator + NAME);
@@ -105,55 +118,6 @@ public class App {
 		 */
 
 		System.out.println("FINISHED");
-	}
-
-	/**
-	 * TODO works globally? No.
-	 */
-	private void visualTest(Graph graph) {
-		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
-		Set<NodeEntity> needsMergeFromRight = graph.getNeedsMergeFromRight();
-		if (!(needsMergeFromRight.size() == (graph.getSizeProblem() + graph.getContainsProblem()))) {
-			graph.printMergeProblem();
-			System.err.println("Warning: match");
-		} else {
-			graph.printMergeProblem();
-		}
-		Pixel current;
-		Map<NodeEntity, NodeEntity> dataSet = graph.getRetrievableDataSet();
-		for (NodeEntity ne : dataSet.keySet()) {
-			current = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
-			current.setRed(255);
-			if (needsMergeFromRight.contains(ne)) {
-				current.setGreen(255);
-				current.setBlue(255);
-			}
-		}
-
-		ir.draw();
-
-		try {
-			Thread.sleep(4000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			throw new RuntimeException("interupt");
-		}
-
-		LineMaker lm = new LineMaker(ir);
-
-		int x1, x2, y1, y2;
-		Map<NodeEntity, NodeEntity> dataSet1 = graph.getRetrievableDataSet();
-		for (NodeEntity ne : dataSet1.keySet()) {
-			x1 = convertLonToPixX(ne.getLon());
-			y1 = convertLatToPixY(ne.getLat());
-			for (NodeEntity adj : ne.getAdjacents()) {
-				x2 = convertLonToPixX(adj.getLon());
-				y2 = convertLatToPixY(adj.getLat());
-				lm.drawLine(x1, y1, x2, y2, 0, 255, 255);
-			}
-		}
-
-		ir.draw();
 	}
 
 	/**
@@ -174,7 +138,64 @@ public class App {
 		deltaLat = maxLat - minLat;
 		deltaLon = maxLon - minLon;
 	}
+	
+	/**
+	 * TODO works globally? No.
+	 */
+	private void visualTest(Graph graph, int maxAlt) {
+		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
+		Pixel current;
+		Map<NodeEntity, NodeEntity> dataSet = graph.getRetrievableDataSet();
+		for (NodeEntity ne : dataSet.keySet()) {
+			current = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
+			current.setRed(255);
+			current.setGreen(255);
+			current.setBlue(255);
+		}
 
+		ir.draw();
+
+		try {
+			Thread.sleep(8000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+			throw new RuntimeException("interupt");
+		}
+
+		LineMaker lm = new LineMaker(ir);
+
+		int x1, x2, y1, y2;
+		short elev1,elev2;
+		Map<NodeEntity, NodeEntity> dataSet1 = graph.getRetrievableDataSet();
+		for (NodeEntity ne : dataSet1.keySet()) {
+			x1 = convertLonToPixX(ne.getLon());
+			y1 = convertLatToPixY(ne.getLat());
+			elev1 = ne.getElev();
+			int colorValue;
+			for (NodeEntity adj : ne.getAdjacents()) {
+				x2 = convertLonToPixX(adj.getLon());
+				y2 = convertLatToPixY(adj.getLat());
+				elev2 = adj.getElev();
+				colorValue = interpolateColorToMaxAlt((int)((elev1 + elev2) / 2), (int) maxAlt);
+				lm.drawLine(x1, y1, x2, y2, colorValue, 255 - colorValue, 0);
+			}
+		}
+
+		ir.draw();
+	}
+
+	/**
+	 * 
+	 * @param alt
+	 * @return
+	 */
+	private int interpolateColorToMaxAlt(int alt, int maxAlt){
+		assert (alt <= maxAlt);
+		double step = (double) maxAlt / 255.0;
+		int value = (int) ((double) alt / step);
+		return value;
+	}
+	
 	/**
 	 * TODO works globally? No.
 	 * 
@@ -208,6 +229,7 @@ public class App {
 	/**
 	 * 
 	 */
+	@SuppressWarnings("unused")
 	private void printBounds() {
 		System.out.println(" --------------------- BOUNDS:");
 		System.out.println("minLat " + minLat);
