@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import building_blocks.DEMReader;
 import building_blocks.DEMTile;
@@ -31,8 +30,8 @@ public class App {
 
 	public final static boolean development = false;
 
-	private double minLon = Double.MAX_VALUE, maxLon = Double.MIN_VALUE, minLat = Double.MAX_VALUE,
-			maxLat = Double.MIN_VALUE;
+	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0,
+			maxLat = -1000.0;
 	private double deltaLat, deltaLon;
 	public static final int PIC_WIDTH_MAX_INDEX = 1999;
 	public static final int PIC_HEIGHT_MAX_INDEX = 999;
@@ -137,10 +136,11 @@ public class App {
 		}
 		deltaLat = maxLat - minLat;
 		deltaLon = maxLon - minLon;
+		printBounds();
 	}
 	
 	/**
-	 * TODO works globally? No.
+	 *
 	 */
 	private void visualTest(Graph graph, int maxAlt) {
 		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
@@ -197,7 +197,7 @@ public class App {
 	}
 	
 	/**
-	 * TODO works globally? No.
+	 *
 	 * 
 	 * @param lat
 	 * @return
@@ -212,7 +212,7 @@ public class App {
 	}
 
 	/**
-	 * TODO works globally? No.
+	 *
 	 * 
 	 * @param lat
 	 * @return
@@ -229,7 +229,6 @@ public class App {
 	/**
 	 * 
 	 */
-	@SuppressWarnings("unused")
 	private void printBounds() {
 		System.out.println(" --------------------- BOUNDS:");
 		System.out.println("minLat " + minLat);
