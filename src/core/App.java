@@ -22,16 +22,21 @@ import lib_duke.LineMaker;
 import lib_duke.Pixel;
 import session.SessionAdapter;
 
+//http://www.dis.uniroma1.it/challenge9/download.shtml
+
 public class App {
 
+	// elev bounds
+	private static final short UPPER_BOUND = 9999;
+	private static final short LOWER_BOUND = -333;
+	
 	// output
 	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
 	private final static String NAME = "test1";
 
 	public final static boolean development = false;
 
-	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0,
-			maxLat = -1000.0;
+	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
 	public static final int PIC_WIDTH_MAX_INDEX = 1999;
 	public static final int PIC_HEIGHT_MAX_INDEX = 999;
@@ -45,9 +50,17 @@ public class App {
 		app.compose();
 	}
 
-	/**
-	 * 
-	 */
+	//
+	//
+	public short maxElev = Short.MIN_VALUE;
+	public short minElev = Short.MAX_VALUE;
+	public short elevAvg = 0;
+	
+	private short elev;
+	private long elevSum = 0;
+	private int voidCounter = 0;
+	//
+	//
 	private void compose() {
 		System.out.println("Working with " + DB_names.NAME);
 		List<NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
@@ -68,59 +81,96 @@ public class App {
 
 		if (development) {
 			computeBoundsOfExistingNodes(graph);
-			visualTest(graph,1000);
+			visualTest(graph, 1000);
 			graph.testOverlap();
 			graph.testCompareLeftRightPlay();
 		}
 
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>();
-		for(NodeEntity ne : graph.getRetrievableDataSet().keySet()) listedDataSet.add(ne);
-		Collections.sort(listedDataSet);
-		
-		//add elev
+		long renumberedId = 1;
+		for (NodeEntity ne : graph.getRetrievableDataSet().keySet()){
+			//because of zero adjacency nodes removed from graph
+			ne.setId(renumberedId);
+			renumberedId ++;
+			listedDataSet.add(ne);
+		}
+		Collections.sort(listedDataSet); // by id
+
+		// add elev
 		System.out.println("WORKING ON ELEV");
 		DEMReader reader = new DEMReader();
 		Map<NodeEntity, DEMTile> nodeToDEMTile = new HashMap<NodeEntity, DEMTile>();
 		Map<String, DEMTile> nameToDEMTile = new HashMap<String, DEMTile>();
 
-		for(NodeEntity node : listedDataSet){
+		for (NodeEntity node : listedDataSet) {
 			String neededTile = reader.findNameOfTile(node.getLon(), node.getLat());
-			
-			if(nameToDEMTile.keySet().contains(neededTile)){
+
+			if (nameToDEMTile.keySet().contains(neededTile)) {
 				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
-			}else{
+			} else {
 				nameToDEMTile.put(neededTile, new DEMTile(neededTile, reader));
 				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
 			}
 		}
-		System.out.println("tiles needed:");
-		for(String tile : nameToDEMTile.keySet())System.out.println(tile);
-		System.out.println("reading elevs");
-		short maxElev = Short.MIN_VALUE;
-		short elev;
-		for (NodeEntity node : listedDataSet){
-			DEMTile tile = nodeToDEMTile.get(node);
-			elev = tile.getElev(node.getLat(), node.getLon());
-			if(elev > maxElev) maxElev = elev;
-			node.setElev(elev);
-		}
+
+		System.out.println("Tiles needed:");
+		for (String tile : nameToDEMTile.keySet())
+			System.out.println(tile);
+
+		System.out.println("Reading elevs");
 		
+		for (NodeEntity node : listedDataSet) {
+			DEMTile tile = nodeToDEMTile.get(node);
+			
+			elev = tile.getElev(node.getLat(), node.getLon());
+			if(! isWithinBounds(elev)){
+				System.err.println("ELEV CORRECTION NEEDED on:\n" + node.hashCode());
+				node.setNeedsElevCorr(true);
+				voidCounter ++;
+			}
+			
+			// raw elev set for all nodes, filtering is much better done in client app 
+			node.setElev(elev);
+			
+			if (elev > maxElev)
+				maxElev = elev;
+			if (elev < minElev)
+				minElev = elev;
+			elevSum += (long) elev;
+		}
+
+		elevAvg = (short) (elevSum / (long) (listedDataSet.size()));
 		System.out.println("Max elev: " + maxElev);
+		System.out.println("Min elev: " + minElev);
+		System.out.println("Elev avg: " + elevAvg);
+		System.err.println("Voids: " + voidCounter);
+
 		computeBoundsOfExistingNodes(graph);
 		visualTest(graph, maxElev);
-		
-		/*
-		 * System.out.println("\n\nwriting: " + PATH + File.separator + NAME);
-		 * WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet,
-		 * graph); try { wof.write(); } catch (IOException e) {
-		 * e.printStackTrace(); throw new RuntimeException("write"); }
-		 */
 
+		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
+		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
+		try {
+			wof.write();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("write");
+		}
 		System.out.println("FINISHED");
+	}
+	
+	/**
+	 * @param rawElev
+	 * @return
+	 */
+	private boolean isWithinBounds (short elev){
+		if(elev > UPPER_BOUND || elev < LOWER_BOUND) return false;
+		else return true;
 	}
 
 	/**
 	 * these are bounds for visualisation, not map bounds
+	 * 
 	 * @param graph
 	 */
 	public void computeBoundsOfExistingNodes(Graph graph) {
@@ -138,7 +188,7 @@ public class App {
 		deltaLon = maxLon - minLon;
 		printBounds();
 	}
-	
+
 	/**
 	 *
 	 */
@@ -165,7 +215,7 @@ public class App {
 		LineMaker lm = new LineMaker(ir);
 
 		int x1, x2, y1, y2;
-		short elev1,elev2;
+		short elev1, elev2;
 		Map<NodeEntity, NodeEntity> dataSet1 = graph.getRetrievableDataSet();
 		for (NodeEntity ne : dataSet1.keySet()) {
 			x1 = convertLonToPixX(ne.getLon());
@@ -176,7 +226,7 @@ public class App {
 				x2 = convertLonToPixX(adj.getLon());
 				y2 = convertLatToPixY(adj.getLat());
 				elev2 = adj.getElev();
-				colorValue = interpolateColorToMaxAlt((int)((elev1 + elev2) / 2), (int) maxAlt);
+				colorValue = interpolateColorToMaxAlt((int) ((elev1 + elev2) / 2), (int) maxAlt);
 				lm.drawLine(x1, y1, x2, y2, colorValue, 255 - colorValue, 0);
 			}
 		}
@@ -185,20 +235,17 @@ public class App {
 	}
 
 	/**
-	 * 
 	 * @param alt
 	 * @return
 	 */
-	private int interpolateColorToMaxAlt(int alt, int maxAlt){
+	private int interpolateColorToMaxAlt(int alt, int maxAlt) {
 		assert (alt <= maxAlt);
 		double step = (double) maxAlt / 255.0;
 		int value = (int) ((double) alt / step);
 		return value;
 	}
-	
+
 	/**
-	 *
-	 * 
 	 * @param lat
 	 * @return
 	 */
@@ -212,8 +259,6 @@ public class App {
 	}
 
 	/**
-	 *
-	 * 
 	 * @param lat
 	 * @return
 	 */
@@ -226,6 +271,9 @@ public class App {
 		return ret;
 	}
 
+	
+	
+	
 	/**
 	 * 
 	 */
@@ -251,6 +299,9 @@ public class App {
 		System.out.println("=========================================================================");
 	}
 
+	
+	
+	
 	@SuppressWarnings("unused")
 	private void testHash() {
 		NodeEntity a = new NodeEntity(0, 50.1234567891, 14.12345678921, (short) -1, new HashSet<NodeEntity>());

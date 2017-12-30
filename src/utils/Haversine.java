@@ -4,8 +4,8 @@ public class Haversine {
 
 	 //courtesy to somebody at stack overflow:-)
 
-	 public static final double EQUAT_EARTH_RADIUS = 6378.1370D;
-	 public static final double D2R = (Math.PI / 180D);
+	 private static final double EQUAT_EARTH_RADIUS = 6378.1370D;
+	 private static final double D2R = (Math.PI / 180D);
 
 	 /**
 	  * @param args

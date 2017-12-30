@@ -43,7 +43,9 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	@JoinTable(name = DB_names.TABLE_ADJACENTS)
 	private Set<NodeEntity> adjacents;
 
-	private transient short elev;
+	private transient short elev = 100;
+	//Redundant. But verbose maybe better than (not so obvious) Short.MIN_VALUE  
+	private transient boolean needsElevCorr = false;
 	private static final transient double EPSILON = 0.00000001d;//0.00000001d;
 
 	public NodeEntity() {
@@ -95,34 +97,30 @@ public class NodeEntity implements Comparable <NodeEntity>{
 		this.lat = l;
 	}
 	
-	/**
-	 * @return the weight
-	 */
 	public short getWeight() {
 		return weight;
 	}
 
-	/**
-	 * @param weight the weight to set
-	 */
 	public void setWeight(short weight) {
 		this.weight = weight;
 	}
 
-	/**
-	 * @return the elev
-	 */
 	public short getElev() {
 		return elev;
 	}
 
-	/**
-	 * @param elev the elev to set
-	 */
 	public void setElev(short elev) {
 		this.elev = elev;
 	}
 
+	public boolean needsElevCorr() {
+		return needsElevCorr;
+	}
+
+	public void setNeedsElevCorr(boolean needsElevCorr) {
+		this.needsElevCorr = needsElevCorr;
+	}
+	
 	public Set<NodeEntity> getAdjacents() {
 		return adjacents;
 	}
