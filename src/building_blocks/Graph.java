@@ -42,6 +42,7 @@ public class Graph {
 	public void buildIn(Tile tile) {
 
 		NodeEntity nodeEntityLeft;
+		List<NodeEntity> swapQueueLeft, swapQueueRight;
 
 		for (NodeEntity nodeEntityRight : tile.getData()) {
 			rawSize++;
@@ -51,10 +52,23 @@ public class Graph {
 				// PUT
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
 				// ALSO PUT ALL ADJACENTS
+				swapQueueLeft = new ArrayList<NodeEntity>();
+				swapQueueRight = new ArrayList<NodeEntity>();
 				for (NodeEntity ne : nodeEntityRight.getAdjacents()) {
 					if (!retrievableDataSet.containsKey(ne)) {
 						retrievableDataSet.put(ne, ne);
+					} else {
+						// PUT PAIR ON SWAP QUEUE
+						swapQueueLeft.add(retrievableDataSet.get(ne));
+						swapQueueRight.add(ne);
 					}
+				}
+				
+				assert(swapQueueLeft.size() == swapQueueRight.size());
+				
+				for(int i = 0; i < swapQueueLeft.size(); i++){
+					nodeEntityRight.getAdjacents().remove(swapQueueRight.get(i));
+					nodeEntityRight.getAdjacents().add(swapQueueLeft.get(i));
 				}
 
 				if (App.development)
@@ -65,8 +79,9 @@ public class Graph {
 				// ONLY MERGE IN LEFT NODE ADJACENTS FROM RIGHT
 				Set<NodeEntity> leftAdj = retrievableDataSet.get(nodeEntityRight).getAdjacents();
 				Set<NodeEntity> rightAdj = nodeEntityRight.getAdjacents();
-				for(NodeEntity right : rightAdj){
-					if(! leftAdj.contains(right))leftAdj.add(right);
+				for (NodeEntity right : rightAdj) {
+					if (!leftAdj.contains(right))
+						leftAdj.add(right);
 				}
 			}
 			nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
