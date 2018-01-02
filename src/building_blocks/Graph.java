@@ -2,6 +2,7 @@ package building_blocks;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,19 +50,20 @@ public class Graph {
 
 			if (!retrievableDataSet.keySet().contains(nodeEntityRight)) {
 				// PUT IT IN
-
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
+				// AND ALSO PUT IN ALL ADJACENTS
+				for (NodeEntity ne : nodeEntityRight.getAdjacents()) {
+					retrievableDataSet.put(ne, ne);
+				}
 
 			} else {
 				// IS ALREADY IN
-
 				if (App.development)
 					matchFound.add(nodeEntityRight);
-
 				// MERGE adjacents
 				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
 
-				mergeAdjacentsIntoLeft(nodeEntityLeft, nodeEntityRight);
+				//mergeAdjacentsIntoLeft(nodeEntityLeft, nodeEntityRight);
 
 				// check weight
 				short weightLeft = nodeEntityLeft.getWeight();
@@ -75,6 +77,39 @@ public class Graph {
 		testDatasetIntegrity();
 	}
 
+	/*
+	public void correctDiffBtwNodesInAdjSetsAndMainDataset() {
+
+		Set<NodeEntity> adj = null;
+		Set<NodeEntity> newAdj = null;
+		NodeEntity fromDataSet = null;
+		int sameId = 0;
+		int diffId = 0;
+		int sameObj = 0;
+		for (NodeEntity ne : retrievableDataSet.keySet()) {
+			adj = ne.getAdjacents();
+			newAdj = new HashSet<NodeEntity>();
+			for (NodeEntity adjNodeEntity : adj) {
+				fromDataSet = retrievableDataSet.get(adjNodeEntity);
+				assert (fromDataSet != null && adjNodeEntity.equals(fromDataSet));
+				newAdj.add(fromDataSet);
+				if (adjNodeEntity.getId() == fromDataSet.getId())
+					sameId++;
+				else
+					diffId++;
+				if (fromDataSet == adjNodeEntity)
+					sameObj++;
+			}
+			assert(newAdj.size() == adj.size());
+			for(NodeEntity neNew : newAdj){
+				assert(retrievableDataSet.containsKey(neNew));
+			}
+			ne.setAdjacents(newAdj);
+		}
+		printCorrectStats(sameId, diffId, sameObj);
+	}
+	*/
+	
 	/**
 	 * 
 	 * @param left
@@ -202,6 +237,21 @@ public class Graph {
 	 */
 	public int getContainsProblem() {
 		return containsProblem;
+	}
+
+	/**
+	 * 
+	 * @param sameId
+	 * @param difId
+	 * @param sameObj
+	 */
+	private void printCorrectStats(int sameId, int diffId, int sameObj) {
+		System.out.println("=========================================================================");
+		System.out.println("CORRECT STATS:");
+		System.out.println("SAME ID: " + sameId);
+		System.out.println("DIFF ID: " + diffId);
+		System.out.println("SAME OBJECT: " + sameObj);
+		System.out.println("=========================================================================");
 	}
 
 	/**

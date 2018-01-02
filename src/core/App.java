@@ -34,10 +34,10 @@ public class App {
 	private static final short LOWER_BOUND = -333;
 
 	// output
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling/smallTest";
 	private final static String NAME = "test1";
 
-	public final static boolean development = false;
+	public final static boolean development = true;
 
 	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
@@ -66,6 +66,7 @@ public class App {
 	//
 	//
 	private void compose() {
+		
 		System.out.println("Working with " + DB_names.NAME);
 		List<NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
 		System.out.println("Loaded ShotsEntity");
@@ -80,6 +81,8 @@ public class App {
 			graph.buildIn(tile);
 		}
 
+		//graph.correctDiffBtwNodesInAdjSetsAndMainDataset();
+		
 		graph.computeMergedEdgeSize();
 		graph.printStats();
 
@@ -248,7 +251,7 @@ public class App {
 		ir.draw();
 		
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(15000);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 			throw new RuntimeException("interupt1");
@@ -341,7 +344,7 @@ public class App {
 
 	private void printCheckDatasetConsistency(int listed, int adj, int notRenumberedL, int notRenumberedAdj) {
 		System.out.println("=========================================================================");
-		System.out.println("printCheckDatasetConsistency");
+		System.out.println("PRINT CHECK Dataset Consistency");
 		System.out.println("listedContainsProblem " + listed);
 		System.out.println("adjacentsContainsProblem " + adj);
 		System.out.println("notRenumberedProblemInListed " + notRenumberedL);
@@ -352,9 +355,9 @@ public class App {
 			Map <NodeEntity, NodeEntity> compareBigMap, List<NodeEntity> compareBigList) {
 		int c = 0;
 		System.out.println("=========================================================================");
-		System.out.println("culprits.size() = " + culprits.size());
+		System.out.println("CULPRITS.size() = " + culprits.size());
 		for (NodeEntity ne : culprits) {
-			if (c % 500 == 0){
+			if (c % 500 == 0 || development){
 				System.out.println("\nGROUP");
 				System.out.println("GROUP");
 				System.out.println("GROUP");
@@ -374,7 +377,6 @@ public class App {
 			}
 			c++;
 		}
-		
 	}
 
 	private void printTileInfo(Tile tile, int shot) {
