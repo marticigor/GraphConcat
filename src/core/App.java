@@ -33,11 +33,11 @@ public class App {
 	private static final short UPPER_BOUND = 9999;
 	private static final short LOWER_BOUND = -333;
 
-	// output
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling/smallTest";
+	// output /smallTest
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
 	private final static String NAME = "test1";
 
-	public final static boolean development = true;
+	public final static boolean development = false;
 
 	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
@@ -66,7 +66,7 @@ public class App {
 	//
 	//
 	private void compose() {
-		
+
 		System.out.println("Working with " + DB_names.NAME);
 		List<NmbShotsEntity> shots = SessionAdapter.getInstance().loadNmbShotsEntities();
 		System.out.println("Loaded ShotsEntity");
@@ -80,11 +80,6 @@ public class App {
 			printTileInfo(tile, shot);
 			graph.buildIn(tile);
 		}
-
-		//graph.correctDiffBtwNodesInAdjSetsAndMainDataset();
-		
-		graph.computeMergedEdgeSize();
-		graph.printStats();
 
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
@@ -102,14 +97,13 @@ public class App {
 		int containsProblemAdj = 0;
 		int notRenumberedListed = 0;
 		int notRenumberedAdj = 0;
-		List<NodeEntity> notRenumberedCulprits = new ArrayList<NodeEntity>();
-		for (NodeEntity ne : listedDataSet) {
+		Map<NodeEntity, NodeEntity> notRenumberedCulpritsParentToChild = new HashMap<NodeEntity, NodeEntity>();
+		for (NodeEntity ne : graph.getRetrievableDataSet().keySet()) {
 			if (!graph.getRetrievableDataSet().keySet().contains(ne)) {
 				containsProblemListed++;
 			}
 			if (ne.isRenumbered() == false) {
 				notRenumberedListed++;
-				notRenumberedCulprits.add(ne);
 			}
 			for (NodeEntity neAdj : ne.getAdjacents()) {
 				if (!graph.getRetrievableDataSet().keySet().contains(neAdj)) {
@@ -117,16 +111,15 @@ public class App {
 				}
 				if (neAdj.isRenumbered() == false) {
 					notRenumberedAdj++;
-					notRenumberedCulprits.add(neAdj);
+					notRenumberedCulpritsParentToChild.put(ne, neAdj);
 				}
 			}
 		}
 		
-		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
-		printNotRenumberedCulprits(notRenumberedCulprits, graph.getRetrievableDataSet(), listedDataSet);
+		graph.computeMergedEdgeSize();
+		graph.printStats();
 
-		//assert (containsProblemListed == 0 && containsProblemAdj == 0 && notRenumberedListed == 0
-			//	&& notRenumberedAdj == 0);
+		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
 
 		if (development) {
 			computeBoundsOfExistingNodes(graph);
@@ -186,7 +179,7 @@ public class App {
 		System.err.println("Voids: " + voidCounter);
 
 		computeBoundsOfExistingNodes(graph);
-		visualTest(graph, maxElev,notRenumberedCulprits);
+		visualTest(graph, maxElev, notRenumberedCulpritsParentToChild);
 
 		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
 		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
@@ -234,34 +227,39 @@ public class App {
 	/**
 	 * culprits allowed null
 	 */
-	private void visualTest(Graph graph, int maxAlt, List<NodeEntity> culprits) {
+	private void visualTest(Graph graph, int maxAlt, Map<NodeEntity, NodeEntity> culprits) {
 		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
-		Pixel current;
+		Pixel currentParent, currentCulprit;
 		Map<NodeEntity, NodeEntity> dataSet = graph.getRetrievableDataSet();
-		
-		if(culprits != null){
-			for (NodeEntity ne : culprits){
-				current = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
-				current.setRed(255);
-				current.setGreen(0);
-				current.setBlue(255);
+		NodeEntity culprit;
+		if (culprits != null) {
+			for (NodeEntity parent : culprits.keySet()) {
+				culprit = culprits.get(parent);
+				currentParent = ir.getPixel(convertLonToPixX(parent.getLon()), convertLatToPixY(parent.getLat()));
+				currentParent.setRed(0);
+				currentParent.setGreen(255);
+				currentParent.setBlue(0);
+				currentCulprit = ir.getPixel(convertLonToPixX(culprit.getLon()), convertLatToPixY(culprit.getLat()));
+				currentCulprit.setRed(255);
+				currentCulprit.setGreen(0);
+				currentCulprit.setBlue(255);
 			}
 		}
-		
+
 		ir.draw();
-		
+
 		try {
 			Thread.sleep(15000);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 			throw new RuntimeException("interupt1");
 		}
-		
+
 		for (NodeEntity ne : dataSet.keySet()) {
-			current = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
-			current.setRed(255);
-			current.setGreen(255);
-			current.setBlue(255);
+			currentParent = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
+			currentParent.setRed(255);
+			currentParent.setGreen(255);
+			currentParent.setBlue(255);
 		}
 
 		ir.draw();
@@ -349,34 +347,6 @@ public class App {
 		System.out.println("adjacentsContainsProblem " + adj);
 		System.out.println("notRenumberedProblemInListed " + notRenumberedL);
 		System.out.println("notRenumberedProblemInAdj " + notRenumberedAdj);
-	}
-
-	private void printNotRenumberedCulprits(List<NodeEntity> culprits,
-			Map <NodeEntity, NodeEntity> compareBigMap, List<NodeEntity> compareBigList) {
-		int c = 0;
-		System.out.println("=========================================================================");
-		System.out.println("CULPRITS.size() = " + culprits.size());
-		for (NodeEntity ne : culprits) {
-			if (c % 500 == 0 || development){
-				System.out.println("\nGROUP");
-				System.out.println("GROUP");
-				System.out.println("GROUP");
-				System.out.println("\nCULPRIT");
-				System.out.println(ne);
-				System.out.println("\nCOMPARE FROM BIG MAP");
-				System.out.println(compareBigMap.get(ne));
-				System.out.println("\nCOMPARE FROM BIG LIST");
-				for(NodeEntity fromList : compareBigList){
-					if(ne.equals(fromList)){
-						System.out.println("\nCULPRIT");
-						System.out.println(ne);
-						System.out.println("\nFROM BIG LIST");
-						System.out.println(fromList);
-					}
-				}
-			}
-			c++;
-		}
 	}
 
 	private void printTileInfo(Tile tile, int shot) {

@@ -2,7 +2,6 @@ package building_blocks;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,68 +47,42 @@ public class Graph {
 			rawSize++;
 			edgeSizeNoMerge += nodeEntityRight.getAdjacents().size();
 
-			if (!retrievableDataSet.keySet().contains(nodeEntityRight)) {
-				// PUT IT IN
+			if (!retrievableDataSet.containsKey(nodeEntityRight)) {
+				// PUT
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
-				// AND ALSO PUT IN ALL ADJACENTS
+				// ALSO PUT ALL ADJACENTS
 				for (NodeEntity ne : nodeEntityRight.getAdjacents()) {
-					retrievableDataSet.put(ne, ne);
+					if (!retrievableDataSet.containsKey(ne)) {
+						retrievableDataSet.put(ne, ne);
+					}
 				}
 
-			} else {
-				// IS ALREADY IN
 				if (App.development)
 					matchFound.add(nodeEntityRight);
-				// MERGE adjacents
-				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
 
-				//mergeAdjacentsIntoLeft(nodeEntityLeft, nodeEntityRight);
-
-				// check weight
-				short weightLeft = nodeEntityLeft.getWeight();
-				short weightRight = nodeEntityRight.getWeight();
-				if (weightLeft != weightRight)
-					weightUpdated++;
-				nodeEntityLeft.setWeight((short) Math.max(weightLeft, weightRight));
+			} else {
+				// IS IN
+				// ONLY MERGE IN LEFT NODE ADJACENTS FROM RIGHT
+				Set<NodeEntity> leftAdj = retrievableDataSet.get(nodeEntityRight).getAdjacents();
+				Set<NodeEntity> rightAdj = nodeEntityRight.getAdjacents();
+				for(NodeEntity right : rightAdj){
+					if(! leftAdj.contains(right))leftAdj.add(right);
+				}
 			}
+			nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
+
+			// check weight
+			short weightLeft = nodeEntityLeft.getWeight();
+			short weightRight = nodeEntityRight.getWeight();
+			if (weightLeft != weightRight)
+				weightUpdated++;
+			nodeEntityLeft.setWeight((short) Math.max(weightLeft, weightRight));
+
 		} // for
 
 		testDatasetIntegrity();
 	}
 
-	/*
-	public void correctDiffBtwNodesInAdjSetsAndMainDataset() {
-
-		Set<NodeEntity> adj = null;
-		Set<NodeEntity> newAdj = null;
-		NodeEntity fromDataSet = null;
-		int sameId = 0;
-		int diffId = 0;
-		int sameObj = 0;
-		for (NodeEntity ne : retrievableDataSet.keySet()) {
-			adj = ne.getAdjacents();
-			newAdj = new HashSet<NodeEntity>();
-			for (NodeEntity adjNodeEntity : adj) {
-				fromDataSet = retrievableDataSet.get(adjNodeEntity);
-				assert (fromDataSet != null && adjNodeEntity.equals(fromDataSet));
-				newAdj.add(fromDataSet);
-				if (adjNodeEntity.getId() == fromDataSet.getId())
-					sameId++;
-				else
-					diffId++;
-				if (fromDataSet == adjNodeEntity)
-					sameObj++;
-			}
-			assert(newAdj.size() == adj.size());
-			for(NodeEntity neNew : newAdj){
-				assert(retrievableDataSet.containsKey(neNew));
-			}
-			ne.setAdjacents(newAdj);
-		}
-		printCorrectStats(sameId, diffId, sameObj);
-	}
-	*/
-	
 	/**
 	 * 
 	 * @param left
@@ -137,6 +110,7 @@ public class Graph {
 	 * @param left
 	 * @param right
 	 */
+	@SuppressWarnings("unused")
 	private void mergeAdjacentsIntoLeft(NodeEntity left, NodeEntity right) {
 
 		if (App.development) {
@@ -245,6 +219,7 @@ public class Graph {
 	 * @param difId
 	 * @param sameObj
 	 */
+	@SuppressWarnings("unused")
 	private void printCorrectStats(int sameId, int diffId, int sameObj) {
 		System.out.println("=========================================================================");
 		System.out.println("CORRECT STATS:");
