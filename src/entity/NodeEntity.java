@@ -17,8 +17,8 @@ import javax.persistence.Table;
 @Table(name = DB_names.TABLE_NODES)
 public class NodeEntity implements Comparable <NodeEntity>{
 
-	// finaly I will want this graph format
-	// https://www.dropbox.com/s/8et183ufeskkibi/IMG_20171019_194557.jpg?dl=0
+	// graph format
+	// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
 
 	// https://stackoverflow.com/questions/21069687/hibernate-auto-create-database
 	// https://stackoverflow.com/questions/43716068/invalid-syntax-error-type-myisam-in-ddl-generated-by-hibernate/43720565
@@ -44,9 +44,13 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	private Set<NodeEntity> adjacents;
 
 	private transient short elev = 100;
-	//Redundant. But verbose maybe better than (not so obvious) Short.MIN_VALUE  
+	//Redundant. But verbose maybe better than (not so obvious) elev = Short.MIN_VALUE
+	//TODO not used actually!
 	private transient boolean needsElevCorr = false;
+	
 	private static final transient double EPSILON = 0.00000001d;//0.00000001d;
+	
+	private transient boolean renumbered = false;
 
 	public NodeEntity() {
 	}
@@ -131,8 +135,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * 10000000.0);//100000.0
-		double latFloored = Math.floor(lat * 10000000.0);
+		double lonFloored = Math.floor(lon * 1000000.0);//10000000.0
+		double latFloored = Math.floor(lat * 1000000.0);
 		return Objects.hash(lonFloored, latFloored);
 	}
 
@@ -174,8 +178,10 @@ public class NodeEntity implements Comparable <NodeEntity>{
 		.append(" |lat ").append(lat).append("\n");
 		sb.append("|weight ").append(weight).append(" |elev ").append(elev);
 		sb.append("\n|hashCode(): ").append(hashCode());
+		sb.append("\n RENUMBERED = " + renumbered);
 		sb.append("\n\tadjacents:").append(adjacents.size()).append("\n");
-		
+		sb.append("\tADJACENTS COMMENTED OUT IN toString()");
+		/*
 		for (NodeEntity n : adjacents) {
 			if (n == this) {
 				System.err.println("reference to this in adjacents in NodeEntity.toString()");
@@ -188,8 +194,10 @@ public class NodeEntity implements Comparable <NodeEntity>{
 			sb.append("\n\tlon:").append(n.getLon());
 			sb.append("\n\tweight: ").append(n.getWeight());
 			sb.append("\n\telev: ").append(n.getElev());
+			sb.append("\n\trenumbered: ").append(n.isRenumbered());
 			
 		}
+		*/
 		return sb.toString();
 	}
 
@@ -200,5 +208,13 @@ public class NodeEntity implements Comparable <NodeEntity>{
 		Long hisId = new Long(theOther.getId());
 		
 		return myId.compareTo(hisId);
+	}
+
+	public boolean isRenumbered() {
+		return renumbered;
+	}
+
+	public void setRenumbered(boolean renumbered) {
+		this.renumbered = renumbered;
 	}
 }

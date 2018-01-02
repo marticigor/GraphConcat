@@ -12,6 +12,9 @@ import entity.NodeEntity;
 import utils.FormatDouble;
 import utils.Haversine;
 
+// graph format
+// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
+
 public class WriteOutputFile {
 
 	public final static String EXTENSION = ".graph";
@@ -57,10 +60,13 @@ public class WriteOutputFile {
     				currentId = current.getId();
     				
     				assert((long) id == currentId);
+    				
+    				// in the final app using Byte will save memory
+    				assert((int) current.getWeight() <= (int) Byte.MAX_VALUE);
 					
-    				bw.write(FormatDouble.formatDouble(current.getLat())
+    				bw.write(FormatDouble.formatDouble10(current.getLat())
 							+ SEP +
-							FormatDouble.formatDouble(current.getLon())
+							FormatDouble.formatDouble10(current.getLon())
 							+ SEP +
 							current.getElev()
 							+ SEP +
@@ -81,7 +87,7 @@ public class WriteOutputFile {
     						+ SEP +
     						adj.getId()
     						+ SEP +
-    						FormatDouble.formatDouble(distance);
+    						FormatDouble.formatDouble2(distance);
     				bw.write(line);
     				bw.newLine();
     				assertionCounter ++;

@@ -5,6 +5,9 @@ import java.util.List;
 import entity.NodeEntity;
 import session.SessionAdapter;
 
+// graph format
+// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
+
 public class Tile {
 
 	private List <NodeEntity> data;

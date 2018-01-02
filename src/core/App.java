@@ -21,15 +21,18 @@ import lib_duke.ImageResource;
 import lib_duke.LineMaker;
 import lib_duke.Pixel;
 import session.SessionAdapter;
-
+//more data
 //http://www.dis.uniroma1.it/challenge9/download.shtml
+
+// graph format
+// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
 
 public class App {
 
 	// elev bounds
 	private static final short UPPER_BOUND = 9999;
 	private static final short LOWER_BOUND = -333;
-	
+
 	// output
 	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
 	private final static String NAME = "test1";
@@ -55,10 +58,11 @@ public class App {
 	public short maxElev = Short.MIN_VALUE;
 	public short minElev = Short.MAX_VALUE;
 	public short elevAvg = 0;
-	
+
 	private short elev;
 	private long elevSum = 0;
 	private int voidCounter = 0;
+
 	//
 	//
 	private void compose() {
@@ -79,22 +83,54 @@ public class App {
 		graph.computeMergedEdgeSize();
 		graph.printStats();
 
+		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
+
+		Collections.sort(listedDataSet); // by id
+
+		long renumberedId = 1;
+		for (NodeEntity ne : listedDataSet) {
+			ne.setId(renumberedId);
+			ne.setRenumbered(true);
+			renumberedId++;
+		}
+
+		// DATASET CONSISTENCY CHECK
+		int containsProblemListed = 0;
+		int containsProblemAdj = 0;
+		int notRenumberedListed = 0;
+		int notRenumberedAdj = 0;
+		List<NodeEntity> notRenumberedCulprits = new ArrayList<NodeEntity>();
+		for (NodeEntity ne : listedDataSet) {
+			if (!graph.getRetrievableDataSet().keySet().contains(ne)) {
+				containsProblemListed++;
+			}
+			if (ne.isRenumbered() == false) {
+				notRenumberedListed++;
+				notRenumberedCulprits.add(ne);
+			}
+			for (NodeEntity neAdj : ne.getAdjacents()) {
+				if (!graph.getRetrievableDataSet().keySet().contains(neAdj)) {
+					containsProblemAdj++;
+				}
+				if (neAdj.isRenumbered() == false) {
+					notRenumberedAdj++;
+					notRenumberedCulprits.add(neAdj);
+				}
+			}
+		}
+		
+		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
+		printNotRenumberedCulprits(notRenumberedCulprits, graph.getRetrievableDataSet(), listedDataSet);
+
+		//assert (containsProblemListed == 0 && containsProblemAdj == 0 && notRenumberedListed == 0
+			//	&& notRenumberedAdj == 0);
+
 		if (development) {
 			computeBoundsOfExistingNodes(graph);
-			visualTest(graph, 1000);
+			visualTest(graph, 1000, null);
 			graph.testOverlap();
 			graph.testCompareLeftRightPlay();
 		}
-
-		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>();
-		long renumberedId = 1;
-		for (NodeEntity ne : graph.getRetrievableDataSet().keySet()){
-			//because of zero adjacency nodes removed from graph
-			ne.setId(renumberedId);
-			renumberedId ++;
-			listedDataSet.add(ne);
-		}
-		Collections.sort(listedDataSet); // by id
 
 		// add elev
 		System.out.println("WORKING ON ELEV");
@@ -118,20 +154,21 @@ public class App {
 			System.out.println(tile);
 
 		System.out.println("Reading elevs");
-		
+
 		for (NodeEntity node : listedDataSet) {
 			DEMTile tile = nodeToDEMTile.get(node);
-			
+
 			elev = tile.getElev(node.getLat(), node.getLon());
-			if(! isWithinBounds(elev)){
+			if (!isWithinBounds(elev)) {
 				System.err.println("ELEV CORRECTION NEEDED on:\n" + node.hashCode());
 				node.setNeedsElevCorr(true);
-				voidCounter ++;
+				voidCounter++;
 			}
-			
-			// raw elev set for all nodes, filtering is much better done in client app 
+
+			// raw elev set for all nodes, filtering is much better done in
+			// client app
 			node.setElev(elev);
-			
+
 			if (elev > maxElev)
 				maxElev = elev;
 			if (elev < minElev)
@@ -146,7 +183,7 @@ public class App {
 		System.err.println("Voids: " + voidCounter);
 
 		computeBoundsOfExistingNodes(graph);
-		visualTest(graph, maxElev);
+		visualTest(graph, maxElev,notRenumberedCulprits);
 
 		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
 		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
@@ -157,15 +194,17 @@ public class App {
 			throw new RuntimeException("write");
 		}
 		System.out.println("FINISHED");
-	}
-	
+	}// compose
+
 	/**
 	 * @param rawElev
 	 * @return
 	 */
-	private boolean isWithinBounds (short elev){
-		if(elev > UPPER_BOUND || elev < LOWER_BOUND) return false;
-		else return true;
+	private boolean isWithinBounds(short elev) {
+		if (elev > UPPER_BOUND || elev < LOWER_BOUND)
+			return false;
+		else
+			return true;
 	}
 
 	/**
@@ -190,12 +229,31 @@ public class App {
 	}
 
 	/**
-	 *
+	 * culprits allowed null
 	 */
-	private void visualTest(Graph graph, int maxAlt) {
+	private void visualTest(Graph graph, int maxAlt, List<NodeEntity> culprits) {
 		ImageResource ir = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
 		Pixel current;
 		Map<NodeEntity, NodeEntity> dataSet = graph.getRetrievableDataSet();
+		
+		if(culprits != null){
+			for (NodeEntity ne : culprits){
+				current = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
+				current.setRed(255);
+				current.setGreen(0);
+				current.setBlue(255);
+			}
+		}
+		
+		ir.draw();
+		
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+			throw new RuntimeException("interupt1");
+		}
+		
 		for (NodeEntity ne : dataSet.keySet()) {
 			current = ir.getPixel(convertLonToPixX(ne.getLon()), convertLatToPixY(ne.getLat()));
 			current.setRed(255);
@@ -209,7 +267,7 @@ public class App {
 			Thread.sleep(8000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
-			throw new RuntimeException("interupt");
+			throw new RuntimeException("interupt2");
 		}
 
 		LineMaker lm = new LineMaker(ir);
@@ -271,12 +329,6 @@ public class App {
 		return ret;
 	}
 
-	
-	
-	
-	/**
-	 * 
-	 */
 	private void printBounds() {
 		System.out.println(" --------------------- BOUNDS:");
 		System.out.println("minLat " + minLat);
@@ -287,11 +339,44 @@ public class App {
 		System.out.println("deltaLon " + deltaLon);
 	}
 
-	/**
-	 * 
-	 * @param tile
-	 * @param shot
-	 */
+	private void printCheckDatasetConsistency(int listed, int adj, int notRenumberedL, int notRenumberedAdj) {
+		System.out.println("=========================================================================");
+		System.out.println("printCheckDatasetConsistency");
+		System.out.println("listedContainsProblem " + listed);
+		System.out.println("adjacentsContainsProblem " + adj);
+		System.out.println("notRenumberedProblemInListed " + notRenumberedL);
+		System.out.println("notRenumberedProblemInAdj " + notRenumberedAdj);
+	}
+
+	private void printNotRenumberedCulprits(List<NodeEntity> culprits,
+			Map <NodeEntity, NodeEntity> compareBigMap, List<NodeEntity> compareBigList) {
+		int c = 0;
+		System.out.println("=========================================================================");
+		System.out.println("culprits.size() = " + culprits.size());
+		for (NodeEntity ne : culprits) {
+			if (c % 500 == 0){
+				System.out.println("\nGROUP");
+				System.out.println("GROUP");
+				System.out.println("GROUP");
+				System.out.println("\nCULPRIT");
+				System.out.println(ne);
+				System.out.println("\nCOMPARE FROM BIG MAP");
+				System.out.println(compareBigMap.get(ne));
+				System.out.println("\nCOMPARE FROM BIG LIST");
+				for(NodeEntity fromList : compareBigList){
+					if(ne.equals(fromList)){
+						System.out.println("\nCULPRIT");
+						System.out.println(ne);
+						System.out.println("\nFROM BIG LIST");
+						System.out.println(fromList);
+					}
+				}
+			}
+			c++;
+		}
+		
+	}
+
 	private void printTileInfo(Tile tile, int shot) {
 		System.out.println("=========================================================================");
 		System.err.println("\nSHOT " + shot);
@@ -299,9 +384,6 @@ public class App {
 		System.out.println("=========================================================================");
 	}
 
-	
-	
-	
 	@SuppressWarnings("unused")
 	private void testHash() {
 		NodeEntity a = new NodeEntity(0, 50.1234567891, 14.12345678921, (short) -1, new HashSet<NodeEntity>());
