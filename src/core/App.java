@@ -34,7 +34,8 @@ public class App {
 	private static final short LOWER_BOUND = -333;
 
 	// output /smallTest
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling";
+	//"/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling"
+	private final static String PATH = "/home/radim/Desktop";
 	private final static String NAME = "test1";
 
 	public final static boolean development = false;
