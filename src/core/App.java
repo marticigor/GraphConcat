@@ -21,6 +21,7 @@ import lib_duke.ImageResource;
 import lib_duke.LineMaker;
 import lib_duke.Pixel;
 import session.SessionAdapter;
+import test_mocks.MockTiles;
 //more data
 //http://www.dis.uniroma1.it/challenge9/download.shtml
 
@@ -32,12 +33,15 @@ public class App {
 	// elev bounds
 	private static final short UPPER_BOUND = 9999;
 	private static final short LOWER_BOUND = -333;
+	public static final short MOCK_ELEV = 333;
 
 	// output /smallTest
 	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling/smallTest";
 	private final static String NAME = "test1";
 
-	public final static boolean development = false;
+	public final static boolean DEVELOPMENT = false;
+	public final static boolean VERBOSE = false;
+	public final static boolean MOCKS = false;
 
 	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
@@ -74,13 +78,23 @@ public class App {
 		int maxShotId = nmbOfShots - 1;
 		System.out.println("NmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
 		Graph graph = new Graph();
-		// iterate tiles
-		for (int shot = 0; shot <= maxShotId; shot++) {
-			Tile tile = new Tile(shot);
-			printTileInfo(tile, shot);
-			graph.buildIn(tile);
-		}
 
+		if (MOCKS) {
+
+			MockTiles mt = new MockTiles();
+			for (Tile tile : mt.getTiles()) {
+				printTileInfo(tile, tile.getShotId());
+				graph.buildIn(tile);
+			}
+
+		} else {
+			// iterate regular tiles
+			for (int shot = 0; shot <= maxShotId; shot++) {
+				Tile tile = new Tile(shot);
+				printTileInfo(tile, shot);
+				graph.buildIn(tile);
+			}
+		}
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
 		Collections.sort(listedDataSet); // by id
@@ -115,70 +129,75 @@ public class App {
 				}
 			}
 		}
-		
+
 		graph.computeMergedEdgeSize();
 		graph.printStats();
 
 		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
 
-		if (development) {
+		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
 			visualTest(graph, 1000, null);
 			graph.testOverlap();
 			graph.testCompareLeftRightPlay();
 		}
 
-		// add elev
-		System.out.println("WORKING ON ELEV");
-		DEMReader reader = new DEMReader();
-		Map<NodeEntity, DEMTile> nodeToDEMTile = new HashMap<NodeEntity, DEMTile>();
-		Map<String, DEMTile> nameToDEMTile = new HashMap<String, DEMTile>();
+		if (!MOCKS) {
+			// add elev to regular nodes
+			System.out.println("WORKING ON ELEV");
+			DEMReader reader = new DEMReader();
+			Map<NodeEntity, DEMTile> nodeToDEMTile = new HashMap<NodeEntity, DEMTile>();
+			Map<String, DEMTile> nameToDEMTile = new HashMap<String, DEMTile>();
 
-		for (NodeEntity node : listedDataSet) {
-			String neededTile = reader.findNameOfTile(node.getLon(), node.getLat());
+			for (NodeEntity node : listedDataSet) {
+				String neededTile = reader.findNameOfTile(node.getLon(), node.getLat());
 
-			if (nameToDEMTile.keySet().contains(neededTile)) {
-				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
-			} else {
-				nameToDEMTile.put(neededTile, new DEMTile(neededTile, reader));
-				nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
-			}
-		}
-
-		System.out.println("Tiles needed:");
-		for (String tile : nameToDEMTile.keySet())
-			System.out.println(tile);
-
-		System.out.println("Reading elevs");
-
-		for (NodeEntity node : listedDataSet) {
-			DEMTile tile = nodeToDEMTile.get(node);
-
-			elev = tile.getElev(node.getLat(), node.getLon());
-			if (!isWithinBounds(elev)) {
-				System.err.println("ELEV CORRECTION NEEDED on:\n" + node.hashCode());
-				node.setNeedsElevCorr(true);
-				voidCounter++;
+				if (nameToDEMTile.keySet().contains(neededTile)) {
+					nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
+				} else {
+					nameToDEMTile.put(neededTile, new DEMTile(neededTile, reader));
+					nodeToDEMTile.put(node, nameToDEMTile.get(neededTile));
+				}
 			}
 
-			// raw elev set for all nodes, filtering is much better done in
-			// client app
-			node.setElev(elev);
+			System.out.println("Tiles needed:");
+			for (String tile : nameToDEMTile.keySet())
+				System.out.println(tile);
 
-			if (elev > maxElev)
-				maxElev = elev;
-			if (elev < minElev)
-				minElev = elev;
-			elevSum += (long) elev;
-		}
+			System.out.println("Reading elevs");
 
-		elevAvg = (short) (elevSum / (long) (listedDataSet.size()));
-		System.out.println("Max elev: " + maxElev);
-		System.out.println("Min elev: " + minElev);
-		System.out.println("Elev avg: " + elevAvg);
-		System.err.println("Voids: " + voidCounter);
+			for (NodeEntity node : listedDataSet) {
+				DEMTile tile = nodeToDEMTile.get(node);
+
+				elev = tile.getElev(node.getLat(), node.getLon());
+				if (!isWithinBounds(elev)) {
+					System.err.println("ELEV CORRECTION NEEDED on:\n" + node.hashCode());
+					node.setNeedsElevCorr(true);
+					voidCounter++;
+				}
+
+				// raw elev set for all nodes, filtering is much better done in
+				// client app
+				node.setElev(elev);
+
+				if (elev > maxElev)
+					maxElev = elev;
+				if (elev < minElev)
+					minElev = elev;
+				elevSum += (long) elev;
+			}
+
+			elevAvg = (short) (elevSum / (long) (listedDataSet.size()));
+			System.out.println("Max elev: " + maxElev);
+			System.out.println("Min elev: " + minElev);
+			System.out.println("Elev avg: " + elevAvg);
+			System.err.println("Voids: " + voidCounter);
+		} // if( ! mocks)
 
 		computeBoundsOfExistingNodes(graph);
+		if (MOCKS) {
+			maxElev = minElev = elevAvg = MOCK_ELEV;
+		}
 		visualTest(graph, maxElev, notRenumberedCulpritsParentToChild);
 
 		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
@@ -353,6 +372,8 @@ public class App {
 		System.out.println("=========================================================================");
 		System.err.println("\nSHOT " + shot);
 		System.err.println("TILE " + tile.toString());
+		if (VERBOSE)
+			tile.testDumpData();
 		System.out.println("=========================================================================");
 	}
 

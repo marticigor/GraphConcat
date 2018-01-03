@@ -13,6 +13,8 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
+import core.App;
+
 @Entity
 @Table(name = DB_names.TABLE_NODES)
 public class NodeEntity implements Comparable <NodeEntity>{
@@ -43,12 +45,12 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	@JoinTable(name = DB_names.TABLE_ADJACENTS)
 	private Set<NodeEntity> adjacents;
 
-	private transient short elev = 100;
+	private transient short elev = App.MOCK_ELEV;
 	//Redundant. But verbose maybe better than (not so obvious) elev = Short.MIN_VALUE
 	//TODO not used actually!
 	private transient boolean needsElevCorr = false;
 	
-	private static final transient double EPSILON = 0.00000001d;//0.00000001d;
+	private static final transient double EPSILON = 0.0000001d;//0.00000001d;
 	
 	private transient boolean renumbered = false;
 
@@ -56,13 +58,11 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	}
 
 	public NodeEntity(long shotId, double lon, double lat, short weight, Set<NodeEntity> adjacents) {
-
 		this.weight = weight;
 		this.shotId = shotId;
 		this.lon = lon;
 		this.lat = lat;
 		this.adjacents = adjacents;
-
 	}
 
 	public void addToAdj(NodeEntity adj) {
@@ -135,8 +135,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * 1000000.0);//10000000.0
-		double latFloored = Math.floor(lat * 1000000.0);
+		double lonFloored = Math.floor(lon * 100000.0);//10000000.0
+		double latFloored = Math.floor(lat * 100000.0);
 		return Objects.hash(lonFloored, latFloored);
 	}
 
@@ -180,11 +180,11 @@ public class NodeEntity implements Comparable <NodeEntity>{
 		sb.append("\n|hashCode(): ").append(hashCode());
 		sb.append("\n RENUMBERED = " + renumbered);
 		sb.append("\n\tadjacents:").append(adjacents.size()).append("\n");
-		sb.append("\tADJACENTS COMMENTED OUT IN toString()");
-		/*
+		//sb.append("\tADJACENTS COMMENTED OUT IN toString()");
+		
 		for (NodeEntity n : adjacents) {
 			if (n == this) {
-				System.err.println("reference to this in adjacents in NodeEntity.toString()");
+				System.err.println("!!! reference to this in adjacents in NodeEntity.toString()");
 				continue;
 			}
 			sb.append("\n\t" + n.getId() + "---------------------------------");
@@ -197,7 +197,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 			sb.append("\n\trenumbered: ").append(n.isRenumbered());
 			
 		}
-		*/
+		
 		return sb.toString();
 	}
 

@@ -30,7 +30,7 @@ public class Graph {
 	private List<NodeEntity> matchFound = new ArrayList<NodeEntity>();
 
 	public Graph() {
-		if (App.development) {
+		if (App.DEVELOPMENT) {
 			visual = new ImageResource(App.PIC_WIDTH_MAX_INDEX + 1, App.PIC_HEIGHT_MAX_INDEX + 1);
 		}
 	}
@@ -45,17 +45,13 @@ public class Graph {
 			rawSize++;
 			edgeSizeNoMerge += nodeEntityRight.getAdjacents().size();
 
-			if (!retrievableDataSet.containsKey(nodeEntityRight)) {
-				// PUT
-				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
-				
-				if (App.development)
-					matchFound.add(nodeEntityRight);
+			retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
+			for (NodeEntity ne : nodeEntityRight.getAdjacents())
+				retrievableDataSet.put(ne, ne);
 
-			} else {
+			if (App.DEVELOPMENT)
+				matchFound.add(nodeEntityRight);
 
-			}
-			
 			NodeEntity nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
 
 			// check weight
@@ -100,7 +96,7 @@ public class Graph {
 	@SuppressWarnings("unused")
 	private void mergeAdjacentsIntoLeft(NodeEntity left, NodeEntity right) {
 
-		if (App.development) {
+		if (App.DEVELOPMENT) {
 			System.out.println("================================");
 			System.out.println("================================");
 			System.out.println("ADJACENTS LEFT BEFORE MERGE");
@@ -113,7 +109,7 @@ public class Graph {
 			left.getAdjacents().add(rightEntity);
 		}
 
-		if (App.development) {
+		if (App.DEVELOPMENT) {
 			System.out.println("ADJACENTS LEFT AFTER MERGE");
 			printAdj(left);
 		}
