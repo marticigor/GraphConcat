@@ -36,7 +36,12 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output /smallTest
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling/smallTest";
+	//<<<<<<< HEAD
+	//private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling/smallTest";
+	//=======
+	//"/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling"
+	private final static String PATH = "/home/radim/Desktop";
+	//>>>>>>> 0df4f541df7bc90c24c42bed7b0d35e9887cb85e
 	private final static String NAME = "test1";
 
 	public final static boolean DEVELOPMENT = false;
