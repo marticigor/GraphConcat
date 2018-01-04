@@ -95,6 +95,11 @@ public class App {
 				graph.buildIn(tile);
 			}
 		}
+		
+		graph.rebuildDataSet();
+		graph.computeEdgeSizeAfterMerge();
+		graph.printStats();
+		
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
 		Collections.sort(listedDataSet); // by id
@@ -130,7 +135,6 @@ public class App {
 			}
 		}
 
-		graph.computeMergedEdgeSize();
 		graph.printStats();
 
 		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);

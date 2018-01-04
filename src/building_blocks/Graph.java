@@ -2,6 +2,7 @@ package building_blocks;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,111 +42,53 @@ public class Graph {
 	 */
 	public void buildIn(Tile tile) {
 
+		NodeEntity nodeEntityLeft;
+		short weightLeft;
+		short weightRight;
+
 		for (NodeEntity nodeEntityRight : tile.getData()) {
 			rawSize++;
 			edgeSizeNoMerge += nodeEntityRight.getAdjacents().size();
 
-			retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
-			for (NodeEntity ne : nodeEntityRight.getAdjacents())
-				retrievableDataSet.put(ne, ne);
-
-			if (App.DEVELOPMENT)
-				matchFound.add(nodeEntityRight);
-
-			NodeEntity nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
-
-			// check weight
-			short weightLeft = nodeEntityLeft.getWeight();
-			short weightRight = nodeEntityRight.getWeight();
-			if (weightLeft != weightRight)
-				weightUpdated++;
-			nodeEntityLeft.setWeight((short) Math.max(weightLeft, weightRight));
-
+			if (!retrievableDataSet.containsKey(nodeEntityRight)) {
+				// NOT CONTAINS
+				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
+			} else {
+				// DOES CONTAIN
+				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
+				// check weight
+				weightLeft = nodeEntityLeft.getWeight();
+				weightRight = nodeEntityRight.getWeight();
+				if (weightLeft != weightRight)
+					weightUpdated++;
+				nodeEntityLeft.setWeight((short) Math.max(weightLeft, weightRight));
+			}
 		} // for
-
-		testDatasetIntegrity();
 	}
 
 	/**
 	 * 
-	 * @param left
-	 * @param right
-	 * @return
 	 */
-	@SuppressWarnings("unused")
-	private boolean areIdentical(Set<NodeEntity> left, Set<NodeEntity> right) {
-
-		if (left.size() != right.size()) {
-			sizeProblem++;
-			return false;
-		}
-		for (NodeEntity leftNodeEntity : left) {
-			if (!right.contains(leftNodeEntity)) {
-				containsProblem++;
-				return false;
+	public void rebuildDataSet() {
+		Set<NodeEntity> newAdj;
+		NodeEntity definitelyFromLeft;
+		for (NodeEntity current : retrievableDataSet.keySet()) {
+			newAdj = new HashSet<NodeEntity>();
+			for (NodeEntity currentAdj : current.getAdjacents()) {
+				definitelyFromLeft = retrievableDataSet.get(currentAdj);
+				if (definitelyFromLeft == null)
+					throw new RuntimeException("null, inconsistency");
+				newAdj.add(definitelyFromLeft);
 			}
-		}
-		return true;
-	}
-
-	/**
-	 * 
-	 * @param left
-	 * @param right
-	 */
-	@SuppressWarnings("unused")
-	private void mergeAdjacentsIntoLeft(NodeEntity left, NodeEntity right) {
-
-		if (App.DEVELOPMENT) {
-			System.out.println("================================");
-			System.out.println("================================");
-			System.out.println("ADJACENTS LEFT BEFORE MERGE");
-			printAdj(left);
-			System.out.println("ADJACENTS RIGHT BEFORE MERGE");
-			printAdj(right);
-		}
-
-		for (NodeEntity rightEntity : right.getAdjacents()) {
-			left.getAdjacents().add(rightEntity);
-		}
-
-		if (App.DEVELOPMENT) {
-			System.out.println("ADJACENTS LEFT AFTER MERGE");
-			printAdj(left);
-		}
-
-	}
-
-	/**
-	 * 
-	 */
-	public void computeMergedEdgeSize() {
-		for (NodeEntity node : retrievableDataSet.keySet())
-			edgeSizeAfterMerge += node.getAdjacents().size();
-	}
-
-	/**
-	 * called regularly
-	 */
-	private void testDatasetIntegrity() {
-
-		int errorCount = 0;
-		Set<NodeEntity> adj;
-
-		for (NodeEntity left : retrievableDataSet.keySet()) {
-			adj = left.getAdjacents();
-			for (NodeEntity right : adj) {
-				if (!retrievableDataSet.keySet().contains(right))
-					errorCount++;
-			}
-		}
-		if (errorCount != 0) {
-			String msg = "GRAPH INCONSISTENCY detected, error count: " + errorCount;
-			System.err.println(msg);
-			throw new RuntimeException(msg);
+			current.setAdjacents(newAdj);
 		}
 	}
 
+	public void computeEdgeSizeAfterMerge(){
+		for (NodeEntity current : retrievableDataSet.keySet()){
+			edgeSizeAfterMerge += current.getAdjacents().size();
+		}
+	}
 	/**
 	 * @return the dataSet
 	 */
@@ -198,22 +141,6 @@ public class Graph {
 
 	/**
 	 * 
-	 * @param sameId
-	 * @param difId
-	 * @param sameObj
-	 */
-	@SuppressWarnings("unused")
-	private void printCorrectStats(int sameId, int diffId, int sameObj) {
-		System.out.println("=========================================================================");
-		System.out.println("CORRECT STATS:");
-		System.out.println("SAME ID: " + sameId);
-		System.out.println("DIFF ID: " + diffId);
-		System.out.println("SAME OBJECT: " + sameObj);
-		System.out.println("=========================================================================");
-	}
-
-	/**
-	 * 
 	 * @param left
 	 * @param right
 	 */
@@ -238,14 +165,6 @@ public class Graph {
 		System.out.println("EdgeSize after merge: " + this.getEdgeSizeAfterMerge());
 		System.out.println("Weights updated: " + this.weightUpdated);
 		System.out.println("=========================================================================");
-	}
-
-	/**
-	 * 
-	 * @param node
-	 */
-	private void printAdj(NodeEntity node) {
-		System.out.println(node.getAdjacents());
 	}
 
 	/**
