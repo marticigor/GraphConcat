@@ -36,19 +36,16 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output /smallTest
-	//<<<<<<< HEAD
-	//private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling/smallTest";
-	//=======
-	//"/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling"
-	private final static String PATH = "/home/radim/Desktop";
-	//>>>>>>> 0df4f541df7bc90c24c42bed7b0d35e9887cb85e
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling_small";///smallTest";
+	// "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling"
+	// "/home/radim/Desktop"
 	private final static String NAME = "test1";
 
 	public final static boolean DEVELOPMENT = false;
 	public final static boolean VERBOSE = false;
 	public final static boolean MOCKS = false;
 
-	private double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
+	public double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
 	public static final int PIC_WIDTH_MAX_INDEX = 1999;
 	public static final int PIC_HEIGHT_MAX_INDEX = 999;
@@ -100,11 +97,19 @@ public class App {
 				graph.buildIn(tile);
 			}
 		}
-		
+
+		// count zero adjacency nodes before rebuild
+
+		int zeroAdjBefore = graph.countZeroAdjNodes();
+		System.out.println("ZERO ADJ NODES BEFORE REBUILD: " + zeroAdjBefore);
 		graph.rebuildDataSet();
+		int zeroAdjAfter = graph.countZeroAdjNodes();
+		System.out.println("ZERO ADJ NODES AFTER REBUILD: " + zeroAdjAfter);
+		if (zeroAdjAfter != zeroAdjBefore)
+			throw new RuntimeException("zero adjacents counts");
 		graph.computeEdgeSizeAfterMerge();
 		graph.printStats();
-		
+
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
 		Collections.sort(listedDataSet); // by id
@@ -247,6 +252,7 @@ public class App {
 			minLon = (lon < minLon) ? lon : minLon;
 			maxLon = (lon > maxLon) ? lon : maxLon;
 		}
+		// TODO All around world
 		deltaLat = maxLat - minLat;
 		deltaLon = maxLon - minLon;
 		printBounds();
@@ -337,7 +343,7 @@ public class App {
 	 * @return
 	 */
 	public int convertLatToPixY(double lat) {
-		assert (lat <= maxLat);
+		assert (lat >= minLat && lat <= maxLat);
 		double overlapLat = maxLat - lat;
 		double ratio = overlapLat / deltaLat;
 		int ret = ((int) (ratio * (double) PIC_HEIGHT_MAX_INDEX));
@@ -350,7 +356,7 @@ public class App {
 	 * @return
 	 */
 	public int convertLonToPixX(double lon) {
-		assert (lon >= minLon);
+		assert (lon >= minLon && lon <= maxLon);
 		double overlapLon = lon - minLon;
 		double ratio = overlapLon / deltaLon;
 		int ret = ((int) (ratio * (double) PIC_WIDTH_MAX_INDEX));

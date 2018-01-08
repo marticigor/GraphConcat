@@ -84,11 +84,21 @@ public class Graph {
 		}
 	}
 
-	public void computeEdgeSizeAfterMerge(){
-		for (NodeEntity current : retrievableDataSet.keySet()){
+	public int countZeroAdjNodes() {
+		int count = 0;
+		for (NodeEntity node : retrievableDataSet.keySet()) {
+			if (node.getAdjacents().size() == 0)
+				count++;
+		}
+		return count;
+	}
+
+	public void computeEdgeSizeAfterMerge() {
+		for (NodeEntity current : retrievableDataSet.keySet()) {
 			edgeSizeAfterMerge += current.getAdjacents().size();
 		}
 	}
+
 	/**
 	 * @return the dataSet
 	 */
