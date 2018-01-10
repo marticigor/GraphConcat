@@ -114,19 +114,17 @@ public class App {
 
 		// count zero adjacency nodes before rebuild
 
-		int zeroAdjBefore = graph.countZeroAdjNodes();
-		System.out.println("ZERO ADJ NODES BEFORE REBUILD: " + zeroAdjBefore);
 		graph.rebuildDataSet();
+		computeBoundsOfExistingNodes(graph);
 		
 		TestTile testMapAfterRebuild = new TestTile();
 		tests = testMapAfterRebuild.mapAdapter(graph.getRetrievableDataSet());
 		System.out.println("TESTS after rebuild " + tests + "\n\n");
+		if(tests == false){
+			visualizeListCulprits(testMapAfterRebuild.getCulprits());
+		}
 		assert (tests == true);
 		
-		int zeroAdjAfter = graph.countZeroAdjNodes();
-		System.out.println("ZERO ADJ NODES AFTER REBUILD: " + zeroAdjAfter);
-		if (zeroAdjAfter != zeroAdjBefore)
-			throw new RuntimeException("zero adjacents counts");
 		graph.computeEdgeSizeAfterMerge();
 		graph.printStats();
 
@@ -228,7 +226,6 @@ public class App {
 			System.err.println("Voids: " + voidCounter);
 		} // if( ! mocks)
 
-		computeBoundsOfExistingNodes(graph);
 		if (MOCKS) {
 			maxElev = minElev = elevAvg = MOCK_ELEV;
 		}
@@ -347,6 +344,14 @@ public class App {
 		ir.draw();
 	}
 
+	private void visualizeListCulprits(List<NodeEntity> culprits){
+		ImageResource image = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
+		for (NodeEntity n : culprits ){
+			Pixel p = image.getPixel(convertLonToPixX(n.getLon()), convertLatToPixY(n.getLat()));
+			p.setRed(255);
+		}
+		image.draw();
+	}
 	/**
 	 * @param alt
 	 * @return

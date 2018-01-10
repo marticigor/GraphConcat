@@ -57,6 +57,7 @@ public class Graph {
 			} else {
 				// DOES CONTAIN
 				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
+				assert(nodeEntityLeft.getShotId() != nodeEntityRight.getShotId());
 				// check weight
 				weightLeft = nodeEntityLeft.getWeight();
 				weightRight = nodeEntityRight.getWeight();
@@ -83,15 +84,6 @@ public class Graph {
 			}
 			current.setAdjacents(newAdj);
 		}
-	}
-
-	public int countZeroAdjNodes() {
-		int count = 0;
-		for (NodeEntity node : retrievableDataSet.keySet()) {
-			if (node.getAdjacents().size() == 0)
-				count++;
-		}
-		return count;
 	}
 
 	public void computeEdgeSizeAfterMerge() {

@@ -10,15 +10,17 @@ import entity.NodeEntity;
 
 public class TestTile {
 
-	public TestTile() {
+	List<NodeEntity> culprits;
 
+	public TestTile() {
+		culprits = new LinkedList<NodeEntity>();
 	}
 
 	// must return true
 	public boolean testTile(Tile tile) {
 		return testZeroAdj(tile) && testMutualVisibility(tile);
 	}
-	
+
 	public boolean mapAdapter(Map<NodeEntity, NodeEntity> retrievableDataSet) {
 		List<NodeEntity> listedDataSet = new LinkedList<NodeEntity>();
 		for (NodeEntity n : retrievableDataSet.keySet()) {
@@ -48,8 +50,10 @@ public class TestTile {
 			adj = n.getAdjacents();
 			for (NodeEntity adjNode : adj) {
 				adjDeep = adjNode.getAdjacents();
-				if (adjDeep.contains(n) == false)
+				if (adjDeep.contains(n) == false){
 					errors++;
+					culprits.add(n);
+				}
 			}
 
 		}
@@ -59,4 +63,9 @@ public class TestTile {
 		} else
 			return false;
 	}
+
+	public List<NodeEntity> getCulprits() {
+		return culprits;
+	}
+
 }
