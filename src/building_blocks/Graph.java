@@ -25,12 +25,13 @@ public class Graph {
 	private int weightUpdated;
 	private ImageResource visual;
 	private LineMaker line = new LineMaker(visual);
-	private App app = new App();
+	private App app;
 	private List<NodeEntity> playLeft = new ArrayList<NodeEntity>();
 	private List<NodeEntity> playRight = new ArrayList<NodeEntity>();
 	private List<NodeEntity> matchFound = new ArrayList<NodeEntity>();
 
-	public Graph() {
+	public Graph(App app) {
+		this.app = app;
 		if (App.DEVELOPMENT) {
 			visual = new ImageResource(App.PIC_WIDTH_MAX_INDEX + 1, App.PIC_HEIGHT_MAX_INDEX + 1);
 		}

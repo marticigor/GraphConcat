@@ -22,6 +22,7 @@ import lib_duke.LineMaker;
 import lib_duke.Pixel;
 import session.SessionAdapter;
 import test_mocks.MockTiles;
+import test_mocks.TestTile;
 //more data
 //http://www.dis.uniroma1.it/challenge9/download.shtml
 
@@ -36,9 +37,8 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output /smallTest
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling_small";///smallTest";
-	// "/home/radim/stravaGHMdata/decent/SanFranciscoBaySouth14cycling"
-	// "/home/radim/Desktop"
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/sf_bay_south_zoom14_cycling_small";
+
 	private final static String NAME = "test1";
 
 	public final static boolean DEVELOPMENT = false;
@@ -71,6 +71,7 @@ public class App {
 
 	//
 	//
+	Graph graph = new Graph(this);
 	private void compose() {
 
 		System.out.println("Working with " + DB_names.NAME);
@@ -79,30 +80,49 @@ public class App {
 		int nmbOfShots = shots.get(shots.size() - 1).getNmb();
 		int maxShotId = nmbOfShots - 1;
 		System.out.println("NmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
-		Graph graph = new Graph();
 
+		boolean tests = false;;
+		
 		if (MOCKS) {
-
+			TestTile tt = new TestTile();
 			MockTiles mt = new MockTiles();
 			for (Tile tile : mt.getTiles()) {
 				printTileInfo(tile, tile.getShotId());
+				tests = tt.testTile(tile);
+				System.out.println("TESTS " + tests);
+				assert(tests == true);
 				graph.buildIn(tile);
 			}
 
 		} else {
 			// iterate regular tiles
+			TestTile tt = new TestTile();
 			for (int shot = 0; shot <= maxShotId; shot++) {
 				Tile tile = new Tile(shot);
 				printTileInfo(tile, shot);
+				tests = tt.testTile(tile);
+				System.out.println("TESTS " + tests);
+				assert(tests == true);
 				graph.buildIn(tile);
 			}
 		}
+		
+		TestTile testMap = new TestTile();
+		tests = testMap.mapAdapter(graph.getRetrievableDataSet());
+		System.out.println("TESTS after build in loop " + tests + "\n\n");
+		assert (tests == true);
 
 		// count zero adjacency nodes before rebuild
 
 		int zeroAdjBefore = graph.countZeroAdjNodes();
 		System.out.println("ZERO ADJ NODES BEFORE REBUILD: " + zeroAdjBefore);
 		graph.rebuildDataSet();
+		
+		TestTile testMapAfterRebuild = new TestTile();
+		tests = testMapAfterRebuild.mapAdapter(graph.getRetrievableDataSet());
+		System.out.println("TESTS after rebuild " + tests + "\n\n");
+		assert (tests == true);
+		
 		int zeroAdjAfter = graph.countZeroAdjNodes();
 		System.out.println("ZERO ADJ NODES AFTER REBUILD: " + zeroAdjAfter);
 		if (zeroAdjAfter != zeroAdjBefore)
@@ -384,9 +404,9 @@ public class App {
 	}
 
 	private void printTileInfo(Tile tile, int shot) {
-		System.out.println("=========================================================================");
-		System.err.println("\nSHOT " + shot);
-		System.err.println("TILE " + tile.toString());
+		System.out.println("\n\n=========================================================================");
+		System.out.println("\nSHOT " + shot);
+		System.out.println("TILE " + tile.toString());
 		if (VERBOSE)
 			tile.testDumpData();
 		System.out.println("=========================================================================");
