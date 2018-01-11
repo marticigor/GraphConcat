@@ -47,10 +47,10 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	private transient short elev = App.MOCK_ELEV;
 	//Redundant. But verbose maybe better than (not so obvious) elev = Short.MIN_VALUE
-	//TODO not used actually!
+	//not used so far
 	private transient boolean needsElevCorr = false;
 	
-	private static final transient double EPSILON = 0.0000001d;//0.00000001d;
+	private static final transient double EPSILON = 0.0000009999d;
 	
 	private transient boolean renumbered = false;
 
@@ -135,8 +135,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * 100000.0);//10000000.0
-		double latFloored = Math.floor(lat * 100000.0);
+		double lonFloored = Math.floor(lon * 1000000.0);
+		double latFloored = Math.floor(lat * 1000000.0);
 		return Objects.hash(lonFloored, latFloored);
 	}
 

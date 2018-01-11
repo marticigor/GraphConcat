@@ -54,10 +54,22 @@ public class Graph {
 			if (!retrievableDataSet.containsKey(nodeEntityRight)) {
 				// NOT CONTAINS
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
+				assert (retrievableDataSet.containsKey(nodeEntityRight));
+
+				//putAdjacentsIntoDataSet(retrievableDataSet, nodeEntityRight);
+
 			} else {
 				// DOES CONTAIN
 				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
-				assert(nodeEntityLeft.getShotId() != nodeEntityRight.getShotId());
+//				for (NodeEntity adjFromRight : nodeEntityRight.getAdjacents()) {
+//					if (!nodeEntityLeft.getAdjacents().contains(adjFromRight)) {
+//						nodeEntityLeft.getAdjacents().add(adjFromRight);
+//					}
+//					if (!retrievableDataSet.containsKey(adjFromRight)) {
+//						retrievableDataSet.put(adjFromRight, adjFromRight);
+//					}
+//					assert (retrievableDataSet.containsKey(adjFromRight));
+//				}
 				// check weight
 				weightLeft = nodeEntityLeft.getWeight();
 				weightRight = nodeEntityRight.getWeight();
@@ -68,28 +80,83 @@ public class Graph {
 		} // for
 	}
 
+	@SuppressWarnings("unused")
+	private void putAdjacentsIntoDataSet(Map<NodeEntity, NodeEntity> dataset, NodeEntity n) {
+		for (NodeEntity adj : n.getAdjacents()) {
+			if (!dataset.containsKey(adj)) {
+				dataset.put(adj, adj);
+			}
+			assert (dataset.containsKey(adj));
+		}
+	}
+
 	/**
 	 * 
 	 */
 	public void rebuildDataSet() {
 		Set<NodeEntity> newAdj;
 		NodeEntity definitelyFromLeft;
+		int nullFromLeft = 0;
+		int compareSetsFalse = 0;
 		for (NodeEntity current : retrievableDataSet.keySet()) {
 			newAdj = new HashSet<NodeEntity>();
 			for (NodeEntity currentAdj : current.getAdjacents()) {
 				definitelyFromLeft = retrievableDataSet.get(currentAdj);
-				if (definitelyFromLeft == null)
-					throw new RuntimeException("null, inconsistency");
-				newAdj.add(definitelyFromLeft);
+				if (definitelyFromLeft == null) {
+					nullFromLeft++;
+				} else
+					newAdj.add(definitelyFromLeft);
+			}
+			if (compareSets(newAdj, current.getAdjacents()) == false) {
+				compareSetsFalse++;
 			}
 			current.setAdjacents(newAdj);
 		}
+		// https://www.dropbox.com/s/mqijzl4vwzg0zjj/2018-01-11%2010.15.46.jpg?dl=0
+		int fixed = fixMutualVisibility(retrievableDataSet);
+		System.err.println("REBUILD DATASET: FixedEdges (mutual visibility): " + fixed);
+		System.err.println("REBUILD DATASET: From left came Null: " + nullFromLeft);
+		System.err.println("REBUILD DATASET: Compare sets false: " + compareSetsFalse);
 	}
 
 	public void computeEdgeSizeAfterMerge() {
 		for (NodeEntity current : retrievableDataSet.keySet()) {
 			edgeSizeAfterMerge += current.getAdjacents().size();
 		}
+	}
+
+	private boolean compareSets(Set<NodeEntity> old, Set<NodeEntity> young) {
+		return old.containsAll(young) && young.containsAll(old);
+	}
+
+	/**
+	 * if you see me, I need to see you too
+	 * https://www.dropbox.com/s/mqijzl4vwzg0zjj/2018-01-11%2010.15.46.jpg?dl=0
+	 * 
+	 * @param dataset
+	 */
+	private int fixMutualVisibility(Map<NodeEntity, NodeEntity> dataset) {
+		Set<NodeEntity> leftAdj;
+		Set<NodeEntity> rightAdj;
+		int refSelf = 0;
+
+		int newEdges = 0;
+		for (NodeEntity left : dataset.keySet()) {
+			leftAdj = left.getAdjacents();
+			if (leftAdj.contains(left)) {
+				leftAdj.remove(left);
+				refSelf++;
+			}
+			for (NodeEntity right : leftAdj) {
+				rightAdj = right.getAdjacents();
+				if (!rightAdj.contains(left)) {
+					right.addToAdj(left);
+					newEdges++;
+				}
+			}
+		}
+		System.err.println("FIX MUTUAL VISIBILITY: Reference to itself: " + refSelf);
+		return newEdges;
 	}
 
 	/**

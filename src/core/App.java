@@ -36,8 +36,8 @@ public class App {
 	private static final short LOWER_BOUND = -333;
 	public static final short MOCK_ELEV = 333;
 
-	// output /smallTest
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/sf_bay_south_zoom14_cycling_small";
+	// output
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/sf_bay_south_zoom14_cycling";
 
 	private final static String NAME = "test1";
 
@@ -110,9 +110,7 @@ public class App {
 		TestTile testMap = new TestTile();
 		tests = testMap.mapAdapter(graph.getRetrievableDataSet());
 		System.out.println("TESTS after build in loop " + tests + "\n\n");
-		assert (tests == true);
-
-		// count zero adjacency nodes before rebuild
+		//assert (tests == true);
 
 		graph.rebuildDataSet();
 		computeBoundsOfExistingNodes(graph);
@@ -123,10 +121,9 @@ public class App {
 		if(tests == false){
 			visualizeListCulprits(testMapAfterRebuild.getCulprits());
 		}
-		assert (tests == true);
+		//assert (tests == true);
 		
 		graph.computeEdgeSizeAfterMerge();
-		graph.printStats();
 
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
@@ -163,9 +160,8 @@ public class App {
 			}
 		}
 
-		graph.printStats();
-
 		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
+		graph.printStats();
 
 		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
