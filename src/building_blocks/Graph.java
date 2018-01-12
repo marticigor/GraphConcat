@@ -54,22 +54,9 @@ public class Graph {
 			if (!retrievableDataSet.containsKey(nodeEntityRight)) {
 				// NOT CONTAINS
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
-				assert (retrievableDataSet.containsKey(nodeEntityRight));
-
-				//putAdjacentsIntoDataSet(retrievableDataSet, nodeEntityRight);
-
 			} else {
 				// DOES CONTAIN
 				nodeEntityLeft = retrievableDataSet.get(nodeEntityRight);
-//				for (NodeEntity adjFromRight : nodeEntityRight.getAdjacents()) {
-//					if (!nodeEntityLeft.getAdjacents().contains(adjFromRight)) {
-//						nodeEntityLeft.getAdjacents().add(adjFromRight);
-//					}
-//					if (!retrievableDataSet.containsKey(adjFromRight)) {
-//						retrievableDataSet.put(adjFromRight, adjFromRight);
-//					}
-//					assert (retrievableDataSet.containsKey(adjFromRight));
-//				}
 				// check weight
 				weightLeft = nodeEntityLeft.getWeight();
 				weightRight = nodeEntityRight.getWeight();
@@ -78,16 +65,6 @@ public class Graph {
 				nodeEntityLeft.setWeight((short) Math.max(weightLeft, weightRight));
 			}
 		} // for
-	}
-
-	@SuppressWarnings("unused")
-	private void putAdjacentsIntoDataSet(Map<NodeEntity, NodeEntity> dataset, NodeEntity n) {
-		for (NodeEntity adj : n.getAdjacents()) {
-			if (!dataset.containsKey(adj)) {
-				dataset.put(adj, adj);
-			}
-			assert (dataset.containsKey(adj));
-		}
 	}
 
 	/**
@@ -168,7 +145,7 @@ public class Graph {
 
 	/**
 	 * @return original number of nodes read from DB if we call after all work
-	 *         done.
+	 * done.
 	 */
 	public int getRawSize() {
 		return rawSize;

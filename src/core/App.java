@@ -110,7 +110,7 @@ public class App {
 		TestTile testMap = new TestTile();
 		tests = testMap.mapAdapter(graph.getRetrievableDataSet());
 		System.out.println("TESTS after build in loop " + tests + "\n\n");
-		//assert (tests == true);
+		assert (tests == true);
 
 		graph.rebuildDataSet();
 		computeBoundsOfExistingNodes(graph);
@@ -121,7 +121,7 @@ public class App {
 		if(tests == false){
 			visualizeListCulprits(testMapAfterRebuild.getCulprits());
 		}
-		//assert (tests == true);
+		assert (tests == true);
 		
 		graph.computeEdgeSizeAfterMerge();
 
