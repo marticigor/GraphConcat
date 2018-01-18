@@ -96,14 +96,14 @@ public class Graph {
 		System.err.println("REBUILD DATASET: Compare sets false: " + compareSetsFalse);
 	}
 
+	private boolean compareSets(Set<NodeEntity> old, Set<NodeEntity> young) {
+		return old.containsAll(young) && young.containsAll(old);
+	}
+
 	public void computeEdgeSizeAfterMerge() {
 		for (NodeEntity current : retrievableDataSet.keySet()) {
 			edgeSizeAfterMerge += current.getAdjacents().size();
 		}
-	}
-
-	private boolean compareSets(Set<NodeEntity> old, Set<NodeEntity> young) {
-		return old.containsAll(young) && young.containsAll(old);
 	}
 
 	/**
