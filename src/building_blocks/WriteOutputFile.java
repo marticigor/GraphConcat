@@ -46,11 +46,11 @@ public class WriteOutputFile {
 		bw.write(metadata);
 		bw.newLine();
 		// write graphStats
-		String stats = graph.getMergedSize() + SEP + graph.getEdgeSizeAfterMerge();
+		String stats = graph.getDatasetSize() + SEP + graph.getEdgeSizeAfterPrune();
 		bw.write(stats);
 		bw.newLine();
 
-		int size = graph.getMergedSize();
+		int size = graph.getDatasetSize();
 
 		assert (size == dataSet.size());
 
@@ -84,7 +84,7 @@ public class WriteOutputFile {
 				assertionCounter++;
 			}
 		}
-		assert (graph.getEdgeSizeAfterMerge() == assertionCounter);
+		assert (graph.getEdgeSizeAfterPrune() == assertionCounter);
 		bw.close();
 		fos.close();
 	}

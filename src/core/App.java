@@ -14,6 +14,7 @@ import building_blocks.DEMTile;
 import building_blocks.Graph;
 import building_blocks.Tile;
 import building_blocks.WriteOutputFile;
+import building_blocks.clustering.Clustering;
 import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
@@ -51,7 +52,6 @@ public class App {
 	public static final int PIC_HEIGHT_MAX_INDEX = 999;
 
 	public static void main(String args[]) {
-		System.out.println(" ---------------------------------------------------------------------- ");
 		App app = new App();
 		// app.veryBasicTest();
 		// app.testHash();
@@ -72,6 +72,7 @@ public class App {
 	//
 	//
 	Graph graph = new Graph(this);
+
 	private void compose() {
 
 		System.out.println("Working with " + DB_names.NAME);
@@ -81,8 +82,8 @@ public class App {
 		int maxShotId = nmbOfShots - 1;
 		System.out.println("NmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
 
-		boolean tests = false;;
-		
+		boolean tests = false;
+
 		if (MOCKS) {
 			TestTile tt = new TestTile();
 			MockTiles mt = new MockTiles();
@@ -90,7 +91,7 @@ public class App {
 				printTileInfo(tile, tile.getShotId());
 				tests = tt.testTile(tile);
 				System.out.println("TESTS " + tests);
-				assert(tests == true);
+				assert (tests == true);
 				graph.buildIn(tile);
 			}
 
@@ -102,28 +103,32 @@ public class App {
 				printTileInfo(tile, shot);
 				tests = tt.testTile(tile);
 				System.out.println("TESTS " + tests);
-				assert(tests == true);
+				assert (tests == true);
 				graph.buildIn(tile);
 			}
 		}
-		
-		TestTile testMap = new TestTile();
-		tests = testMap.mapAdapter(graph.getRetrievableDataSet());
-		System.out.println("TESTS after build in loop " + tests + "\n\n");
+
+		tests = performTestsOnDataset("< after build in loop completed >");
 		assert (tests == true);
 
 		graph.rebuildDataSet();
 		computeBoundsOfExistingNodes(graph);
-		
-		TestTile testMapAfterRebuild = new TestTile();
-		tests = testMapAfterRebuild.mapAdapter(graph.getRetrievableDataSet());
-		System.out.println("TESTS after rebuild " + tests + "\n\n");
-		if(tests == false){
-			visualizeListCulprits(testMapAfterRebuild.getCulprits());
+
+		tests = performTestsOnDataset("< after rebuild DataSet completed >");
+		if (tests == false) {
+			if (this.culprits == null)
+				throw new RuntimeException("null culprits when data expected");
+			visualizeListCulprits(this.culprits);
 		}
 		assert (tests == true);
-		
+
 		graph.computeEdgeSizeAfterMerge();
+		graph.prune();
+		graph.computeEdgeSizeAfterPrune();
+		computeBoundsOfExistingNodes(graph);
+
+		tests = performTestsOnDataset("< after prune DataSet completed >");
+		assert (tests == true);
 
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
@@ -162,6 +167,15 @@ public class App {
 
 		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
 		graph.printStats();
+
+		// now clustering
+
+		Clustering clustering = new Clustering(graph);
+		long clusteringStart = System.currentTimeMillis();
+		clustering.doInit();
+		clustering.clusterize();
+		long clusteringFinish = System.currentTimeMillis();
+		System.out.println("\n\nClustering time: " + clusteringFinish + clusteringStart);
 
 		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
@@ -237,6 +251,21 @@ public class App {
 		}
 		System.out.println("FINISHED");
 	}// compose
+
+	private List<NodeEntity> culprits;
+
+	/**
+	 * 
+	 * @param stageOfAlgo
+	 * @return
+	 */
+	private boolean performTestsOnDataset(String stageOfAlgo) {
+		TestTile testMap = new TestTile();
+		boolean tests = testMap.mapAdapter(graph.getRetrievableDataSet());
+		this.culprits = testMap.getCulprits();
+		System.out.println("TESTS after " + stageOfAlgo + " : " + tests + "\n\n");
+		return tests;
+	}
 
 	/**
 	 * @param rawElev
@@ -340,14 +369,15 @@ public class App {
 		ir.draw();
 	}
 
-	private void visualizeListCulprits(List<NodeEntity> culprits){
+	private void visualizeListCulprits(List<NodeEntity> culprits) {
 		ImageResource image = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
-		for (NodeEntity n : culprits ){
+		for (NodeEntity n : culprits) {
 			Pixel p = image.getPixel(convertLonToPixX(n.getLon()), convertLatToPixY(n.getLat()));
 			p.setRed(255);
 		}
 		image.draw();
 	}
+
 	/**
 	 * @param alt
 	 * @return
@@ -386,31 +416,33 @@ public class App {
 	}
 
 	private void printBounds() {
-		System.out.println(" --------------------- BOUNDS:");
+		System.out.println("\n\n================================================================== BOUNDS");
 		System.out.println("minLat " + minLat);
 		System.out.println("maxLat " + maxLat);
 		System.out.println("minLon " + minLon);
 		System.out.println("maxLon " + maxLon);
 		System.out.println("deltaLat " + deltaLat);
 		System.out.println("deltaLon " + deltaLon);
+		System.out.println("=========================================================================\n");
 	}
 
 	private void printCheckDatasetConsistency(int listed, int adj, int notRenumberedL, int notRenumberedAdj) {
-		System.out.println("=========================================================================");
+		System.out.println("\n\n=========================================================================");
 		System.out.println("PRINT CHECK Dataset Consistency");
 		System.out.println("listedContainsProblem " + listed);
 		System.out.println("adjacentsContainsProblem " + adj);
 		System.out.println("notRenumberedProblemInListed " + notRenumberedL);
 		System.out.println("notRenumberedProblemInAdj " + notRenumberedAdj);
+		System.out.println("=========================================================================\n");
 	}
 
 	private void printTileInfo(Tile tile, int shot) {
 		System.out.println("\n\n=========================================================================");
-		System.out.println("\nSHOT " + shot);
+		System.out.println("SHOT " + shot);
 		System.out.println("TILE " + tile.toString());
 		if (VERBOSE)
 			tile.testDumpData();
-		System.out.println("=========================================================================");
+		System.out.println("=========================================================================\n");
 	}
 
 	@SuppressWarnings("unused")

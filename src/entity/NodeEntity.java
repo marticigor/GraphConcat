@@ -53,6 +53,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	private static final transient double EPSILON = 0.0000009999d;
 	
 	private transient boolean renumbered = false;
+	
+	public transient VisitedStatus visitedStatus = VisitedStatus.UNVISITED; 
 
 	public NodeEntity() {
 	}

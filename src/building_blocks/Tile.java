@@ -31,7 +31,7 @@ public class Tile {
 		}
 		if (verbose)
 			testDumpData();
-		System.out.println("TEST CONSTRUCTOR TILE");
+		System.out.println("\n\nTEST CONSTRUCTOR TILE");
 	}
 
 	public List<NodeEntity> getData() {
@@ -52,7 +52,7 @@ public class Tile {
 	}
 
 	public void testDumpData() {
-		System.out.println("==========================================");
+		System.out.println("\n\n==========================================");
 		System.out.println("==========================================");
 		System.out.println("==========================================");
 		System.out.println("TEST DUMP DATA TILE SHOT ID: " + shotId);

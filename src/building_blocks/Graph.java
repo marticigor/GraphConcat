@@ -3,12 +3,16 @@ package building_blocks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import core.App;
 import entity.NodeEntity;
+import entity.VisitedStatus;
 import lib_duke.ImageResource;
 import lib_duke.LineMaker;
 import lib_duke.Pixel;
@@ -21,14 +25,18 @@ public class Graph {
 	private int rawSize;
 	private int edgeSizeNoMerge;
 	private int edgeSizeAfterMerge;
+	private int mergedSize;
+	private int edgeSizeAfterPrune;
 	private int sizeProblem, containsProblem;
 	private int weightUpdated;
+	private int prunedOut;
 	private ImageResource visual;
 	private LineMaker line = new LineMaker(visual);
 	private App app;
 	private List<NodeEntity> playLeft = new ArrayList<NodeEntity>();
 	private List<NodeEntity> playRight = new ArrayList<NodeEntity>();
 	private List<NodeEntity> matchFound = new ArrayList<NodeEntity>();
+	private static final int PRUNE_THRESHOLD = 150;
 
 	public Graph(App app) {
 		this.app = app;
@@ -91,19 +99,13 @@ public class Graph {
 		}
 		// https://www.dropbox.com/s/mqijzl4vwzg0zjj/2018-01-11%2010.15.46.jpg?dl=0
 		int fixed = fixMutualVisibility(retrievableDataSet);
+		System.out.println("\n\n=========================================================================");
 		System.err.println("REBUILD DATASET: FixedEdges (mutual visibility): " + fixed);
 		System.err.println("REBUILD DATASET: From left came Null: " + nullFromLeft);
 		System.err.println("REBUILD DATASET: Compare sets false: " + compareSetsFalse);
-	}
+		System.out.println("=========================================================================\n");
 
-	private boolean compareSets(Set<NodeEntity> old, Set<NodeEntity> young) {
-		return old.containsAll(young) && young.containsAll(old);
-	}
-
-	public void computeEdgeSizeAfterMerge() {
-		for (NodeEntity current : retrievableDataSet.keySet()) {
-			edgeSizeAfterMerge += current.getAdjacents().size();
-		}
+		mergedSize = this.getDatasetSize();
 	}
 
 	/**
@@ -137,6 +139,111 @@ public class Graph {
 	}
 
 	/**
+	 *
+	 */
+	public void prune() {
+
+		System.out.println("\n\nPRUNE STARTS " + System.currentTimeMillis());
+		
+		Set<NodeEntity> tempSet = null;
+		Set<NodeEntity> toRemove = new HashSet<NodeEntity>();
+		Queue<NodeEntity> bfsQueue = null;
+		Set<NodeEntity> adj = null;
+		int pruned = 0;
+		int survived = 0;
+		
+		// iterate all nodes from original retrievable dataset
+		for (NodeEntity node : retrievableDataSet.keySet()) {
+			if (node.visitedStatus == VisitedStatus.SURVIVED || node.visitedStatus == VisitedStatus.PRUNED) {
+				continue;
+			} else {
+				tempSet = new HashSet<NodeEntity>();
+				bfsQueue = new LinkedList<NodeEntity>();
+				// run BFS from node into tempSet
+				bfsQueue.add(node);
+				while (bfsQueue.isEmpty() == false) {
+					NodeEntity curr = bfsQueue.remove();
+					if (tempSet.contains(curr) == false) {
+						tempSet.add(curr);
+					}
+					adj = curr.getAdjacents();
+					for (NodeEntity adjNode : adj) {
+						if (tempSet.contains(adjNode) == false) {
+							bfsQueue.add(adjNode);
+							tempSet.add(adjNode);
+						}
+					}
+				}
+			}
+
+			// if tempSet.size < THRESHOLD mark all tempSet as pruned
+			// else mark all tempSet as survived
+			if (tempSet.size() < PRUNE_THRESHOLD) {
+				markBunchOfNodesWithStatus(tempSet, VisitedStatus.PRUNED);
+				pruned += tempSet.size();
+				for (NodeEntity r : tempSet){
+					assert (toRemove.contains(r) == false);
+					toRemove.add(r);
+				}
+			} else {
+				markBunchOfNodesWithStatus(tempSet, VisitedStatus.SURVIVED);
+				survived += tempSet.size();
+			}
+		} // for
+		
+		assert(toRemove.size() == pruned);
+		for(NodeEntity r : toRemove){
+			retrievableDataSet.remove(r);
+		}
+		System.out.println("PRUNE FINISHES " + System.currentTimeMillis());
+		System.out.println("PRUNE results: survived: " + survived + " pruned: " + pruned);
+		this.prunedOut = pruned;
+	}
+
+	private void markBunchOfNodesWithStatus(Iterable<NodeEntity> iterable, VisitedStatus status) {
+		Iterator<NodeEntity> i = iterable.iterator();
+		while (i.hasNext()) {
+			NodeEntity n = i.next();
+			n.visitedStatus = status;
+		}
+	}
+
+	public void computeEdgeSizeAfterMerge() {
+		this.edgeSizeAfterMerge = countAdjacents();
+	}
+
+	public void computeEdgeSizeAfterPrune() {
+		this.edgeSizeAfterPrune = countAdjacents();
+	}
+
+	private int countAdjacents() {
+		int count = 0;
+		for (NodeEntity current : retrievableDataSet.keySet()) {
+			count += current.getAdjacents().size();
+		}
+		return count;
+	}
+
+	private boolean compareSets(Set<NodeEntity> old, Set<NodeEntity> young) {
+		return old.containsAll(young) && young.containsAll(old);
+	}
+
+
+//	private void removeNode(NodeEntity node) {
+//		assert (node != null);
+//		assert (retrievableDataSet.keySet().contains(node));
+//		Set<NodeEntity> adj = node.getAdjacents();
+//		assert (adj != null && adj.size() > 0);
+//		for (NodeEntity adjNode : adj) {
+//			Set<NodeEntity> adjDeep = adjNode.getAdjacents();
+//			assert (adjDeep != null && adjDeep.size() > 0);
+//			assert (adjDeep.contains(node));
+//			adjDeep.remove(node);
+//		}
+//		retrievableDataSet.remove(node);
+//	}
+
+	/**
 	 * @return the dataSet
 	 */
 	public Map<NodeEntity, NodeEntity> getRetrievableDataSet() {
@@ -145,7 +252,7 @@ public class Graph {
 
 	/**
 	 * @return original number of nodes read from DB if we call after all work
-	 * done.
+	 *         done.
 	 */
 	public int getRawSize() {
 		return rawSize;
@@ -154,7 +261,7 @@ public class Graph {
 	/**
 	 * @return final number of nodes if we call after all work done.
 	 */
-	public int getMergedSize() {
+	public int getDatasetSize() {
 		return retrievableDataSet.size();
 	}
 
@@ -170,6 +277,13 @@ public class Graph {
 	 */
 	public int getEdgeSizeAfterMerge() {
 		return edgeSizeAfterMerge;
+	}
+
+	/**
+	 * @return if we call after all work done.
+	 */
+	public int getEdgeSizeAfterPrune() {
+		return edgeSizeAfterPrune;
 	}
 
 	/**
@@ -193,25 +307,28 @@ public class Graph {
 	 */
 	@SuppressWarnings("unused")
 	private void printCompare(NodeEntity left, NodeEntity right) {
-		System.out.println("=========================================================================");
+		System.out.println("\n\n=========================================================================");
 		System.out.println("FROM my DATABASE has just arrived:");
 		System.out.println(right);
 		System.out.println("WHAT I ALREADY HAVE in my DATASET:");
 		System.out.println(left);
-		System.out.println("=========================================================================");
+		System.out.println("=========================================================================\n");
 	}
 
 	/**
 	 * 
 	 */
 	public void printStats() {
-		System.out.println("=========================================================================");
-		System.out.println("RAW number of nodes: " + this.getRawSize());
-		System.out.println("FINAL number of nodes: " + this.getMergedSize());
+		System.out.println("\n\n=========================================================================");
+		System.out.println("Raw number of nodes: " + this.getRawSize());
+		System.out.println("Merged number of nodes: " + this.mergedSize);
 		System.out.println("EdgeSize before merge: " + this.getEdgeSizeNoMerge());
 		System.out.println("EdgeSize after merge: " + this.getEdgeSizeAfterMerge());
 		System.out.println("Weights updated: " + this.weightUpdated);
-		System.out.println("=========================================================================");
+		System.out.println("Nodes removed by prune procedure: " + this.prunedOut);
+		System.out.println("Pruned number of nodes: " + this.getDatasetSize());
+		System.out.println("EdgeSize after prune: " + this.getEdgeSizeAfterPrune());
+		System.out.println("=========================================================================\n");
 	}
 
 	/**
