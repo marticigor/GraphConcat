@@ -228,21 +228,6 @@ public class Graph {
 		return old.containsAll(young) && young.containsAll(old);
 	}
 
-
-//	private void removeNode(NodeEntity node) {
-//		assert (node != null);
-//		assert (retrievableDataSet.keySet().contains(node));
-//		Set<NodeEntity> adj = node.getAdjacents();
-//		assert (adj != null && adj.size() > 0);
-//		for (NodeEntity adjNode : adj) {
-//			Set<NodeEntity> adjDeep = adjNode.getAdjacents();
-//			assert (adjDeep != null && adjDeep.size() > 0);
-//			assert (adjDeep.contains(node));
-//			adjDeep.remove(node);
-//		}
-//		retrievableDataSet.remove(node);
-//	}
-
 	/**
 	 * @return the dataSet
 	 */

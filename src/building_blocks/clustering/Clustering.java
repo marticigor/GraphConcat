@@ -7,22 +7,30 @@ import java.util.List;
 import java.util.Set;
 
 import building_blocks.Graph;
+import core.App;
 import entity.NodeEntity;
+import utils.Haversine;
 
 public class Clustering {
 
 	private Graph graph;
+	@SuppressWarnings("unused")
+	private App app;
 	private int numberClusters;
-	private static final int CLUSTER_SIZE_DIVISOR = 100;
+	private static final int CLUSTER_SIZE_DIVISOR = 20;
+	// to prevent out of memory error for these extremely dense graphs;
+	private static final double MAX_EDGE_DISTANCE = 500.0;
 
 	private double[] lon;
 	private double[] lat;
 	private Set<IdWrapper> forest = new HashSet<IdWrapper>();
 	private List<Point> unprocesedPoints = new LinkedList<Point>();
 	private List<Edge> edges = new LinkedList<Edge>();
+	int countWrappers = 0;
 
-	public Clustering(Graph graph) {
+	public Clustering(Graph graph, App app) {
 		this.graph = graph;
+		this.app = app;
 		this.numberClusters = graph.getDatasetSize() / CLUSTER_SIZE_DIVISOR;
 	}
 
@@ -59,83 +67,79 @@ public class Clustering {
 
 		int n = unprocesedPoints.size();
 		int count = 0;
+		double dist = 0;
 		for (int i = 0; i < n; i++) {
 			Point current = unprocesedPoints.get(0);
 			unprocesedPoints.remove(0);
 			for (Point iterated : unprocesedPoints) {
+				dist = distanceBtw(current, iterated);
+				// to prevent out of memory error for these extremely dense graphs;
+				if (dist > MAX_EDGE_DISTANCE)
+					continue;
 				Edge newOne = new Edge();
 				newOne.p1 = current;
 				newOne.p2 = iterated;
-				newOne.distance = distanceBtw(current, iterated);
+				newOne.distance = dist;
 				edges.add(newOne);
 				// EDGE CONSTRUCTED
 				if (count % 100000 == 0)
-					System.out.println("edgeConstructed " + count);
-				count ++;
+					System.out.println("edges: " + count);
+				count++;
 			}
 		}
 		Collections.sort(edges);
+		System.out.println("edges.size : " + edges.size());
 	}
 
-	// now What To Do?
-	// Think about ways of adopting the Kruskal’s algorithm for solving this
-	// problem.
-
+	/**
+	 * Kruskal
+	 */
 	public void clusterize() {
+		System.out.println("\n\nKruskal start");
+		System.out.println("Number clusters expected: " + numberClusters);
 
-		int currentForrestSize = forest.size();
-
-		while (currentForrestSize > numberClusters) {
+		while (forest.size() > numberClusters && edges.size() > 0) {
 			// retrieve shortest edge
 			Edge currentEdge = edges.get(0);
 
-			// System.out.println("EDGE CONSIDERED "+edges.get(0).toString());
-
-			// check if connection between points of this edge produces a cycle:
-			// this means wrappers of both points have same id -- unnecessary,
-			// wrapper == wrapper2 is better approach
 			Point p1 = currentEdge.p1;
-			long idP1 = p1.wrapper.idRepresentative;
 			Point p2 = currentEdge.p2;
-			long idP2 = p2.wrapper.idRepresentative;
-			// if true, remove this edge from list of edges and continue
-			if (idP1 == idP2) {
-				// System.out.println("EDGE REMOVED !");
+			
+			if(p1.wrapper.idRepresentative == p2.wrapper.idRepresentative) {
 				edges.remove(0);
 				continue;
-			} // else union wrappers and sets of both points
-			else {
-				// System.out.println("---------- UNION OPERATION");
-				IdWrapper w1 = p1.wrapper;
-				Set<Point> s1 = w1.disjointSet;
-
-				// System.out.println("-----------------------------------");
-				// for (Point point1 : s1)
-				// System.out.println("----- set 1 " + point1.toString());
-
-				IdWrapper w2 = p2.wrapper;
-				Set<Point> s2 = w2.disjointSet;
-
-				// System.out.println("-----------------------------------");
-				// for (Point point2 : s2)
-				// System.out.println("----- set 2 " + point2.toString());
-
-				for (Point p : s2) {
-					p.wrapper = w1;
-					s1.add(p);
-				}
-
-				forest.remove(w2);
-				edges.remove(0);
-				s2 = null;
-				currentForrestSize--;
-
-				// System.out.println("-- resulting id of this union " +
-				// w1.idRepresentative);
-				System.out.println("-- currentForrestSize " + currentForrestSize);
-
 			}
+			
+			// System.out.println("---------- UNION OPERATION");
+			IdWrapper w1 = p1.wrapper;
+			Set<Point> s1 = w1.disjointSet;
+
+			IdWrapper w2 = p2.wrapper;
+			Set<Point> s2 = w2.disjointSet;
+
+			for (Point p : s2) {
+				p.wrapper = w1;
+				s1.add(p);
+			}
+
+			forest.remove(w2);
+			edges.remove(0);
+
+			s2 = null;
+			w2 = null;
+
+			if (forest.size() % 10000 == 0)
+				System.out.println("-- currentForrestSize " + forest.size());
 		}
+
+		for (IdWrapper w : forest) {
+			countWrappers += w.disjointSet.size();
+		}
+		if (countWrappers != graph.getDatasetSize()) {
+			System.err.println("NODES MISSED");
+			// throw new RuntimeException("NODES MISSED");
+		}
+		printForestDisjointTreesStats();
 	}
 
 	// --------------------------------------------------------------------------------------------------
@@ -180,15 +184,27 @@ public class Clustering {
 				returnVal += "--------------------- " + p.toString();
 			return returnVal;
 		}
-
 	}
 
-	//TODO safety
-	//TODO haversine in m better?
+	/**
+	 * 
+	 * @param p1
+	 * @param p2
+	 * @return
+	 */
 	private double distanceBtw(Point p1, Point p2) {
-		double deltaLon = (p1.lon - p2.lon);
-		double deltaLat = (p1.lat - p2.lat);
-		return Math.sqrt((deltaLon * deltaLon) + (deltaLat * deltaLat));
+		return Haversine.haversineInM(p1.lat, p1.lon, p2.lat, p2.lon);
 	}
 
+	private void printForestDisjointTreesStats() {
+		System.out.println("\n\n=============================================");
+		System.out.println("ForestDisjointTrees size: " + forest.size());
+		int count = 0;
+		for (IdWrapper w : forest) {
+			System.out.println("size: " + w.disjointSet.size());
+			count += w.disjointSet.size();
+		}
+		System.err.println("DIFF: " + (graph.getDatasetSize() - count));
+		System.out.println("=============================================");
+	}
 }
