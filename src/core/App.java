@@ -394,7 +394,12 @@ public class App {
 	 * @return
 	 */
 	public int convertLatToPixY(double lat) {
-		assert (lat >= minLat && lat <= maxLat);
+		if (!(lat >= minLat && lat <= maxLat)) {
+			System.out.println("my lat: " + lat);
+			printBounds();
+			throw new RuntimeException();
+		}
+		// assert (lat >= minLat && lat <= maxLat);
 		double overlapLat = maxLat - lat;
 		double ratio = overlapLat / deltaLat;
 		int ret = ((int) (ratio * (double) PIC_HEIGHT_MAX_INDEX));
@@ -407,7 +412,12 @@ public class App {
 	 * @return
 	 */
 	public int convertLonToPixX(double lon) {
-		assert (lon >= minLon && lon <= maxLon);
+		if (!(lon >= minLon && lon <= maxLon)) {
+			System.out.println("my lon: " + lon);
+			printBounds();
+			throw new RuntimeException();
+		}
+		// assert (lon >= minLon && lon <= maxLon);
 		double overlapLon = lon - minLon;
 		double ratio = overlapLon / deltaLon;
 		int ret = ((int) (ratio * (double) PIC_WIDTH_MAX_INDEX));
