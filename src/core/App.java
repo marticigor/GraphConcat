@@ -48,8 +48,8 @@ public class App {
 
 	public double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
-	public static final int PIC_WIDTH_MAX_INDEX = 1999;
-	public static final int PIC_HEIGHT_MAX_INDEX = 999;
+	public static final int PIC_WIDTH_MAX_INDEX = 799;
+	public static final int PIC_HEIGHT_MAX_INDEX = 599;
 
 	public static void main(String args[]) {
 		App app = new App();

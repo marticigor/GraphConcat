@@ -4,8 +4,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import building_blocks.Graph;
 import core.App;
@@ -22,15 +27,18 @@ public class Clustering {
 	private static final int EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR = 16;
 	private final double excludeThreshold;
 	private static final int CLUSTER_SIZE_DIVISOR = 15;
-	// to prevent out of memory error for these extremely dense graphs;
+	// to prevent out of memory error for these extremely dense an big graphs;
 	private static final double MAX_EDGE_DISTANCE = 500.0;
 
-	private double[] lon;
-	private double[] lat;
+	private List <NodeEntity> entities;
 	private final Set<IdWrapper> forest = new HashSet<IdWrapper>();
 	private final List<Point> points = new LinkedList<Point>();
-	private final List<Edge> edges = new LinkedList<Edge>();
-	int countWrappers = 0;
+	private List<Edge> edges;
+	private final Map<Edge, Edge> edgesConcurrentRetrievableSet = new ConcurrentHashMap<Edge, Edge>();
+	private int countWrappers = 0;
+	private CyclicBarrier barrier;
+	private Thread main = Thread.currentThread();
+	private volatile boolean barrierReached = false;
 
 	public Clustering(Graph graph, App app) {
 		this.graph = graph;
@@ -45,90 +53,94 @@ public class Clustering {
 	public void doInit() {
 
 		System.out.println("\n\nCLUSTERING\n -- doInitStart");
-		int size = graph.getDatasetSize();
-		lon = new double[size];
-		lat = new double[size];
-		int index = 0;
-		for (NodeEntity n : graph.getRetrievableDataSet().keySet()) {
-			lon[index] = n.getLon();
-			lat[index] = n.getLat();
-			index++;
-		}
+		entities = new LinkedList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 		System.out.println(" -- doInitArraysFilled\n -- iD wrappers creation\n");
 
 		// points
-		int printedInit1 = 0;
+		int printed = 0;
 		long idRepresentative = 1;
-		for (int i = 0; i < lat.length; i++) {
+		for (NodeEntity n : entities) {
 			IdWrapper wrapper = new IdWrapper();
 			Set<Point> disjointSet = new HashSet<Point>();
 			wrapper.disjointSet = disjointSet;
 			wrapper.idRepresentative = idRepresentative;
-			final Point current = new Point(lat[i], lon[i], wrapper);
+			final Point current = new Point(wrapper, n);
 			disjointSet.add(current);
 			points.add(current);
 			forest.add(wrapper);
 			idRepresentative++;
 			if (idRepresentative % 1000 == 0) {
 				System.out.print(", " + idRepresentative);
-				printedInit1++;
-				if (printedInit1 % 20 == 0)
+				printed++;
+				if (printed % 20 == 0)
 					System.out.println();
 
 			}
 		}
 
 		// edges
-		final int n = points.size();
 		final int howMany = 8;
-		final int chunk = n / howMany;
+		final int chunk = points.size() / howMany;
 		final int[] chunkBounds = new int[howMany + 1];
 		chunkBounds[0] = 0;
-		chunkBounds[howMany] = n;
+		chunkBounds[howMany] = points.size();
+		// left inclusive right exclusive
 		for (int i = 1; i < howMany; i++) {
 			chunkBounds[i] = i * chunk;
 		}
-		//from now on chunkBounds treat as immutable
-		
-		System.out.println("\n\nn: " + n);
+		// from now on treat chunkBounds as immutable
+		// from now on treat points as immutable
+		System.out.println("\n\nn: " + points.size());
 		System.out.println("chunk: " + chunk);
 		System.out.println("chunkBounds: " + chunkBounds.toString());
-		for (int i : chunkBounds) System.out.println(i);
+		for (int i : chunkBounds)
+			System.out.println(" -- " + i);
 
-		long count = 0;
-		long skipped = 0;
-		double dist = 0;
-		int printedInit2 = 0;
-		double lonDelta = 0.0;
-		double latDelta = 0.0;
-		System.out.println("\n\n -- edges creation\n");
+		barrier = new CyclicBarrier(howMany, new Runnable() {
+			@Override
+			public void run() {
+				synchronized (printSync) {
+					System.out.println("====== Barrier reached ======\nNOTIFYING main");
+				}
+				// spurious wake up prevention
+				barrierReached = true;
+				synchronized (main) {
+					main.notify();
+				}
+			}
+		});
 
-		for (int i = 0; i < n; i++) {
-			Point current = points.get(i);
-			for (Point iterated : points) {
-				// to prevent out of memory error for these extremely dense
-				// graphs;
-				lonDelta = Math.abs(current.lon - iterated.lon);
-				latDelta = Math.abs(current.lat - iterated.lat);
-				if (lonDelta > excludeThreshold || latDelta > excludeThreshold)
-					continue;
-				dist = distanceBtw(current, iterated);
-				if (dist > MAX_EDGE_DISTANCE) {
-					skipped++;
-					continue;
+		// fork workers
+		for (int positionChunk = 1; positionChunk < chunkBounds.length; positionChunk++) {
+
+			int fromIncl = chunkBounds[positionChunk - 1];
+			int toExcl = chunkBounds[positionChunk];
+			synchronized (printSync) {
+				System.out.println("\nCreating an edge worker, portion given to him (incl, excl): " + fromIncl + ", "
+						+ toExcl + "\n");
+			}
+			EdgesInKartesianWorker worker = new EdgesInKartesianWorker(fromIncl, toExcl);
+			Thread workerThread = new Thread(worker);
+			workerThread.start();
+
+		}
+		// join workers(barrier)
+		synchronized (main) {
+			try {
+				while (barrierReached == false) {
+					synchronized (printSync) {
+						System.out.println("\nPUTTING main ON WAIT\n");
+					}
+					main.wait();
 				}
-				final Edge newOne = new Edge(current, iterated, dist);
-				edges.add(newOne);
-				if (count % 100000 == 0) {
-					System.out.print(", created: " + count + " | skipped: " + skipped);
-					printedInit2++;
-					if (printedInit2 % 5 == 0)
-						System.out.println();
-				}
-				count++;
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				throw new RuntimeException("HALT IN CLUSTERING - WAITING FOR BARRIER TO INVOKE notify()");
 			}
 		}
 
+		System.out.println("main CARIES ON");
+		edges = new LinkedList<Edge>(edgesConcurrentRetrievableSet.keySet());
 		Collections.sort(edges);
 		System.out.println("\n\nedges.size : " + edges.size());
 	}
@@ -182,11 +194,15 @@ public class Clustering {
 
 		for (IdWrapper w : forest) {
 			countWrappers += w.disjointSet.size();
+			for(Point p : w.disjointSet){
+				p.n.setIdCLuster(w.idRepresentative);
+			}
 		}
 		if (countWrappers != graph.getDatasetSize()) {
 			System.err.println("NODES MISSED");
-			// throw new RuntimeException("NODES MISSED");
+			throw new RuntimeException("NODES MISSED");
 		}
+		
 		printForestDisjointTreesStats();
 		visualizeClusters();
 	}
@@ -210,7 +226,7 @@ public class Clustering {
 		for (IdWrapper w : forest) {
 			System.out.print(", " + w.disjointSet.size());
 			printed++;
-			if (printed % 20 == 0)
+			if (printed % 60 == 0)
 				System.out.println();
 			count += w.disjointSet.size();
 		}
@@ -248,23 +264,87 @@ public class Clustering {
 
 	// --------------------------------------------------------------------------------------------------
 
+	private final Object printSync = new Object();
+	private AtomicInteger printed = new AtomicInteger(0);
+
+	private class EdgesInKartesianWorker implements Runnable {
+
+		private final int fromInclusive;
+		private final int toExclusive;
+
+		private EdgesInKartesianWorker(int from, int to) {
+			this.fromInclusive = from;
+			this.toExclusive = to;
+		}
+
+		@Override
+		public void run() {
+
+			long count = 0;
+			long skipped = 0;
+			double dist = 0;
+			double lonDelta = 0.0;
+			double latDelta = 0.0;
+
+			for (int i = fromInclusive; i < toExclusive; i++) {
+				Point current = points.get(i);
+				for (Point iterated : points) {
+					// to prevent out of memory error for these extremely dense
+					// graphs;
+					lonDelta = Math.abs(current.lon - iterated.lon);
+					latDelta = Math.abs(current.lat - iterated.lat);
+					if (lonDelta > excludeThreshold || latDelta > excludeThreshold)
+						continue;
+					dist = distanceBtw(current, iterated);
+					if (dist > MAX_EDGE_DISTANCE) {
+						skipped++;
+						continue;
+					}
+					final Edge newOne = new Edge(current, iterated, dist);
+					edgesConcurrentRetrievableSet.put(newOne, newOne);
+					if (count % 100000 == 0) {
+						synchronized (printSync) {
+							System.out.print(", created: " + count + " | skipped: " + skipped);
+						}
+						printed.incrementAndGet();
+						if (printed.get() % 5 == 0)
+							synchronized (printSync) {
+								System.out.println();
+							}
+					}
+					count++;
+				}
+			}
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				e.printStackTrace();
+				throw new RuntimeException("HALT IN CLUSTERING - calling barrier.await()");
+			}
+		}
+	}
+
+	// --------------------------------------------------------------------------------------------------
+
 	private class Point {
 		private final double lon;
 		private final double lat;
 		private IdWrapper wrapper;
+		private NodeEntity n;
 
-		private Point(double lat, double lon, IdWrapper wrapper) {
-			this.lat = lat;
-			this.lon = lon;
+		private Point(IdWrapper wrapper, NodeEntity n) {
+			this.lat = n.getLat();
+			this.lon = n.getLon();
 			this.wrapper = wrapper;
+			this.n = n;
 		}
 
-		private synchronized void setWrapper(IdWrapper w) {
+		private void setWrapper(IdWrapper w) {
 			this.wrapper = w;
 		}
 
-		public synchronized String toString() {
-			return "< lon: " + lon + ", lat: " + lat + " >" + " wrapper id: " + wrapper.idRepresentative;
+		public String toString() {
+			return "< lon: " + lon + ", lat: " + lat + " >" + " wrapper id: " + wrapper.idRepresentative + "NodeEntity " + n.toString();
 		}
 	}
 
@@ -294,8 +374,8 @@ public class Clustering {
 	}
 
 	private class IdWrapper {
-		Set<Point> disjointSet;
-		long idRepresentative;
+		private Set<Point> disjointSet;
+		private long idRepresentative;
 
 		public String toString() {
 			String returnVal = "----------------- idWrapper: idRepresentative: " + idRepresentative + " | size: "

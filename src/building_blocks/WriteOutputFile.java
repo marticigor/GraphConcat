@@ -67,7 +67,7 @@ public class WriteOutputFile {
 			assert ((int) current.getWeight() <= (int) Byte.MAX_VALUE);
 
 			bw.write(FormatDouble.formatDouble10(current.getLat()) + SEP + FormatDouble.formatDouble10(current.getLon())
-					+ SEP + current.getElev() + SEP + current.getWeight());
+					+ SEP + current.getElev() + SEP + current.getWeight() + SEP + current.getIdCLuster());
 			bw.newLine();
 		}
 		double distance = 0.0;

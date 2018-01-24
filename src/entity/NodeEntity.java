@@ -54,7 +54,9 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	
 	private transient boolean renumbered = false;
 	
-	public transient VisitedStatus visitedStatus = VisitedStatus.UNVISITED; 
+	public transient VisitedStatus visitedStatus = VisitedStatus.UNVISITED;
+	
+	private transient long idCLuster;
 
 	public NodeEntity() {
 	}
@@ -77,6 +79,14 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public long getIdCLuster() {
+		return idCLuster;
+	}
+
+	public void setIdCLuster(long idRepresentative) {
+		this.idCLuster = idRepresentative;
 	}
 
 	public long getShotId() {

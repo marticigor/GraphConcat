@@ -18,7 +18,7 @@ import lib_duke.LineMaker;
 import lib_duke.Pixel;
 
 // graph format
-// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
+// https://www.dropbox.com/s/r4ixnibea713d9p/2018-01-24%2008.45.44.jpg?dl=0
 
 public class Graph {
 	private Map<NodeEntity, NodeEntity> retrievableDataSet = new HashMap<NodeEntity, NodeEntity>();
@@ -45,9 +45,8 @@ public class Graph {
 		}
 	}
 
-	/**
+	/*
 	 * 
-	 * @param tile
 	 */
 	public void buildIn(Tile tile) {
 
@@ -75,7 +74,7 @@ public class Graph {
 		} // for
 	}
 
-	/**
+	/*
 	 * 
 	 */
 	public void rebuildDataSet() {
@@ -112,7 +111,6 @@ public class Graph {
 	 * if you see me, I need to see you too
 	 * https://www.dropbox.com/s/mqijzl4vwzg0zjj/2018-01-11%2010.15.46.jpg?dl=0
 	 * 
-	 * @param dataset
 	 */
 	private int fixMutualVisibility(Map<NodeEntity, NodeEntity> dataset) {
 		Set<NodeEntity> leftAdj;
@@ -151,8 +149,7 @@ public class Graph {
 		Set<NodeEntity> adj = null;
 		int pruned = 0;
 		int survived = 0;
-		
-		// iterate all nodes from original retrievable dataset
+		// iter
 		for (NodeEntity node : retrievableDataSet.keySet()) {
 			if (node.visitedStatus == VisitedStatus.SURVIVED || node.visitedStatus == VisitedStatus.PRUNED) {
 				continue;
@@ -228,68 +225,38 @@ public class Graph {
 		return old.containsAll(young) && young.containsAll(old);
 	}
 
-	/**
-	 * @return the dataSet
-	 */
 	public Map<NodeEntity, NodeEntity> getRetrievableDataSet() {
 		return retrievableDataSet;
 	}
 
-	/**
-	 * @return original number of nodes read from DB if we call after all work
-	 *         done.
-	 */
 	public int getRawSize() {
 		return rawSize;
 	}
 
-	/**
-	 * @return final number of nodes if we call after all work done.
-	 */
 	public int getDatasetSize() {
 		return retrievableDataSet.size();
 	}
 
-	/**
-	 * @return if we call after all work done.
-	 */
 	public int getEdgeSizeNoMerge() {
 		return edgeSizeNoMerge;
 	}
 
-	/**
-	 * @return if we call after all work done.
-	 */
 	public int getEdgeSizeAfterMerge() {
 		return edgeSizeAfterMerge;
 	}
 
-	/**
-	 * @return if we call after all work done.
-	 */
 	public int getEdgeSizeAfterPrune() {
 		return edgeSizeAfterPrune;
 	}
 
-	/**
-	 * @return the sizeProblem
-	 */
 	public int getSizeProblem() {
 		return sizeProblem;
 	}
 
-	/**
-	 * @return the containsProblem
-	 */
 	public int getContainsProblem() {
 		return containsProblem;
 	}
 
-	/**
-	 * 
-	 * @param left
-	 * @param right
-	 */
 	@SuppressWarnings("unused")
 	private void printCompare(NodeEntity left, NodeEntity right) {
 		System.out.println("\n\n=========================================================================");
@@ -300,9 +267,6 @@ public class Graph {
 		System.out.println("=========================================================================\n");
 	}
 
-	/**
-	 * 
-	 */
 	public void printStats() {
 		System.out.println("\n\n=========================================================================");
 		System.out.println("Raw number of nodes: " + this.getRawSize());
@@ -316,11 +280,6 @@ public class Graph {
 		System.out.println("=========================================================================\n");
 	}
 
-	/**
-	 * 
-	 * @param left
-	 * @param right
-	 */
 	@SuppressWarnings("unused")
 	private void testCompareLeftRightStore(NodeEntity left, NodeEntity right) {
 		playLeft.add(left);
