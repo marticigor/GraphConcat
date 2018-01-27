@@ -50,7 +50,9 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	//not used so far
 	private transient boolean needsElevCorr = false;
 	
-	private static final transient double EPSILON = 0.0000009999d;
+	//very very important
+	private static final transient double EPSILON = 0.00009999d;//0.0000009999d;//0.000009999d;
+	private static final transient double HASHCODE_MULTIPLICATION_LON_LAT = 10000.0d;//1000000.0d//100000.0d;
 	
 	private transient boolean renumbered = false;
 	
@@ -147,8 +149,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * 1000000.0);
-		double latFloored = Math.floor(lat * 1000000.0);
+		double lonFloored = Math.floor(lon * HASHCODE_MULTIPLICATION_LON_LAT);
+		double latFloored = Math.floor(lat * HASHCODE_MULTIPLICATION_LON_LAT);
 		return Objects.hash(lonFloored, latFloored);
 	}
 

@@ -38,7 +38,7 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/sf_bay_south_zoom14_cycling";
+	private final static String PATH = "/home/radim/stravaGHMdata/decent/stredni_cechy_zoom14_cycling/smallSample/singleFile";
 
 	private final static String NAME = "test1";
 

@@ -24,13 +24,13 @@ public class Clustering {
 	private Graph graph;
 	private App app;
 	private int numberClusters;
-	private static final int EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR = 16;
+	private static final int EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR = 8;
 	private final double excludeThreshold;
 	private static final int CLUSTER_SIZE_DIVISOR = 15;
 	// to prevent out of memory error for these extremely dense an big graphs;
-	private static final double MAX_EDGE_DISTANCE = 500.0;
+	private static final double MAX_EDGE_DISTANCE = 120.0;
 
-	private List <NodeEntity> entities;
+	private List<NodeEntity> entities;
 	private final Set<IdWrapper> forest = new HashSet<IdWrapper>();
 	private final List<Point> points = new LinkedList<Point>();
 	private List<Edge> edges;
@@ -100,7 +100,7 @@ public class Clustering {
 			@Override
 			public void run() {
 				synchronized (printSync) {
-					System.out.println("====== Barrier reached ======\nNOTIFYING main");
+					System.out.println("\n====== Barrier reached ======\nNOTIFYING main\n");
 				}
 				// spurious wake up prevention
 				barrierReached = true;
@@ -194,7 +194,7 @@ public class Clustering {
 
 		for (IdWrapper w : forest) {
 			countWrappers += w.disjointSet.size();
-			for(Point p : w.disjointSet){
+			for (Point p : w.disjointSet) {
 				p.n.setIdCLuster(w.idRepresentative);
 			}
 		}
@@ -202,7 +202,7 @@ public class Clustering {
 			System.err.println("NODES MISSED");
 			throw new RuntimeException("NODES MISSED");
 		}
-		
+
 		printForestDisjointTreesStats();
 		visualizeClusters();
 	}
@@ -222,16 +222,33 @@ public class Clustering {
 		System.out.println("ForestDisjointTrees size: " + forest.size());
 		int count = 0;
 		int printed = 0;
-		System.out.println("Sizes:\n");
+		int reducingFaktor = determinePrintReducingFactor(forest.size());
+		int iteratedAlready = 0;
+		System.out.println("SIZES");
+		System.out.println("reducingFaktor(print only): " + reducingFaktor);
 		for (IdWrapper w : forest) {
-			System.out.print(", " + w.disjointSet.size());
-			printed++;
-			if (printed % 60 == 0)
-				System.out.println();
+			if (iteratedAlready % reducingFaktor == 0) {
+				System.out.print(", " + w.disjointSet.size());
+				printed++;
+				if (printed % 60 == 0)
+					System.out.println();
+			}
 			count += w.disjointSet.size();
+			iteratedAlready++;
 		}
 		System.err.println("\nDIFF: " + (graph.getDatasetSize() - count));
 		System.out.println("\n=============================================");
+	}
+
+	private int determinePrintReducingFactor(int dataStructureSize) {
+		int faktor = 1;
+		while (true) {
+			if (dataStructureSize / faktor <= 100) {
+				return faktor;
+			} else {
+				faktor++;
+			}
+		}
 	}
 
 	private void visualizeClusters() {
@@ -344,7 +361,8 @@ public class Clustering {
 		}
 
 		public String toString() {
-			return "< lon: " + lon + ", lat: " + lat + " >" + " wrapper id: " + wrapper.idRepresentative + "NodeEntity " + n.toString();
+			return "< lon: " + lon + ", lat: " + lat + " >" + " wrapper id: " + wrapper.idRepresentative + "NodeEntity "
+					+ n.toString();
 		}
 	}
 
