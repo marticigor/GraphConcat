@@ -38,7 +38,7 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output
-	private final static String PATH = "/home/radim/stravaGHMdata/decent/stredni_cechy_zoom14_cycling/smallSample/singleFile";
+	private final static String PATH = "/home/radim/shutter_shots/okoliPrahy";
 
 	private final static String NAME = "test1";
 
@@ -120,6 +120,7 @@ public class App {
 				throw new RuntimeException("null culprits when data expected");
 			visualizeListCulprits(this.culprits);
 		}
+
 		assert (tests == true);
 
 		graph.computeEdgeSizeAfterMerge();
@@ -170,12 +171,13 @@ public class App {
 
 		// now clustering
 
-		Clustering clustering = new Clustering(graph, this);
-		long clusteringStart = System.currentTimeMillis();
-		clustering.doInit();
-		clustering.clusterize();
-		long clusteringFinish = System.currentTimeMillis();
-		System.out.println("\n\nClustering time: " + clusteringFinish + clusteringStart);
+		// Clustering clustering = new Clustering(graph, this);
+		// long clusteringStart = System.currentTimeMillis();
+		// clustering.doInit();
+		// clustering.clusterize();
+		// long clusteringFinish = System.currentTimeMillis();
+		// System.out.println("\n\nClustering time: " + clusteringFinish +
+		// clusteringStart);
 
 		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
@@ -210,12 +212,15 @@ public class App {
 
 			for (NodeEntity node : listedDataSet) {
 				DEMTile tile = nodeToDEMTile.get(node);
-
-				elev = tile.getElev(node.getLat(), node.getLon());
-				if (!isWithinBounds(elev)) {
-					System.err.println("ELEV CORRECTION NEEDED on:\n" + node.hashCode());
-					node.setNeedsElevCorr(true);
-					voidCounter++;
+				try {
+					elev = tile.getElev(node.getLat(), node.getLon());
+					if (!isWithinBounds(elev)) {
+						System.err.println("ELEV CORRECTION NEEDED on:\n" + node.hashCode());
+						node.setNeedsElevCorr(true);
+						voidCounter++;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 
 				// raw elev set for all nodes, filtering is much better done in
@@ -399,7 +404,7 @@ public class App {
 			printBounds();
 			throw new RuntimeException();
 		}
-		// assert (lat >= minLat && lat <= maxLat);
+		//assert (lat >= minLat && lat <= maxLat);
 		double overlapLat = maxLat - lat;
 		double ratio = overlapLat / deltaLat;
 		int ret = ((int) (ratio * (double) PIC_HEIGHT_MAX_INDEX));

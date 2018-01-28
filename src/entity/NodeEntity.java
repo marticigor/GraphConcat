@@ -51,8 +51,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	private transient boolean needsElevCorr = false;
 	
 	//very very important
-	private static final transient double EPSILON = 0.00009999d;//0.0000009999d;//0.000009999d;
-	private static final transient double HASHCODE_MULTIPLICATION_LON_LAT = 10000.0d;//1000000.0d//100000.0d;
+	private static final transient int HASHCODE_MULTIPLICATION_LON_LAT = 100000;
 	
 	private transient boolean renumbered = false;
 	
@@ -149,8 +148,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		double lonFloored = Math.floor(lon * HASHCODE_MULTIPLICATION_LON_LAT);
-		double latFloored = Math.floor(lat * HASHCODE_MULTIPLICATION_LON_LAT);
+		int lonFloored = (int)(lon * HASHCODE_MULTIPLICATION_LON_LAT);
+		int latFloored = (int)(lat * HASHCODE_MULTIPLICATION_LON_LAT);
 		return Objects.hash(lonFloored, latFloored);
 	}
 
@@ -179,8 +178,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	 * @return
 	 */
 	public boolean equalsLonLat(NodeEntity theOther) {
-		boolean lonB = (Math.abs(this.lon - theOther.getLon()) < EPSILON);
-		boolean latB = (Math.abs(this.lat - theOther.getLat()) < EPSILON);
+		boolean lonB = (((int)(this.lon * HASHCODE_MULTIPLICATION_LON_LAT)) == ((int)(theOther.lon * HASHCODE_MULTIPLICATION_LON_LAT)));
+		boolean latB = (((int)(this.lat * HASHCODE_MULTIPLICATION_LON_LAT)) == ((int)(theOther.lat * HASHCODE_MULTIPLICATION_LON_LAT)));
 		return lonB && latB;
 	}
 
@@ -194,7 +193,6 @@ public class NodeEntity implements Comparable <NodeEntity>{
 		sb.append("\n|hashCode(): ").append(hashCode());
 		sb.append("\n RENUMBERED = " + renumbered);
 		sb.append("\n\tadjacents:").append(adjacents.size()).append("\n");
-		//sb.append("\tADJACENTS COMMENTED OUT IN toString()");
 		
 		for (NodeEntity n : adjacents) {
 			if (n == this) {
@@ -209,9 +207,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 			sb.append("\n\tweight: ").append(n.getWeight());
 			sb.append("\n\telev: ").append(n.getElev());
 			sb.append("\n\trenumbered: ").append(n.isRenumbered());
-			
 		}
-		
 		return sb.toString();
 	}
 

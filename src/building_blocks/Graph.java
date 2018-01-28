@@ -36,7 +36,7 @@ public class Graph {
 	private List<NodeEntity> playLeft = new ArrayList<NodeEntity>();
 	private List<NodeEntity> playRight = new ArrayList<NodeEntity>();
 	private List<NodeEntity> matchFound = new ArrayList<NodeEntity>();
-	private static final int PRUNE_THRESHOLD = 150;
+	private static final int PRUNE_THRESHOLD = 200;
 
 	public Graph(App app) {
 		this.app = app;

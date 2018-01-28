@@ -24,7 +24,7 @@ public class Clustering {
 	private Graph graph;
 	private App app;
 	private int numberClusters;
-	private static final int EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR = 8;
+	private static final int EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR = 256;
 	private final double excludeThreshold;
 	private static final int CLUSTER_SIZE_DIVISOR = 15;
 	// to prevent out of memory error for these extremely dense an big graphs;
