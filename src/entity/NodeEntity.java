@@ -51,7 +51,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	private transient boolean needsElevCorr = false;
 	
 	//very very important
-	private static final transient int HASHCODE_MULTIPLICATION_LON_LAT = 100000;
+	private static final transient int HASHCODE_MULTIPLICATION_LON_LAT = 10000;
 	
 	private transient boolean renumbered = false;
 	
