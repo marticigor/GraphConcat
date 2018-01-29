@@ -38,7 +38,7 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output
-	private final static String PATH = "/home/radim/shutter_shots/okoliPrahy";
+	private final static String PATH = "/home/radim/shutter_shots/okoliPrahyII";
 
 	private final static String NAME = "test1";
 
