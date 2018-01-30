@@ -98,7 +98,7 @@ public class Graph {
 		}
 		
 		System.out.println("\n\n=========================================================================");
-		System.out.println("REBUILD DATASET: From left came Null: " + nullFromLeft);
+		System.out.println("REBUILD DATASET: From left came Null in adjacents matching: " + nullFromLeft);
 		System.out.println("REBUILD DATASET: Compare sets false: " + compareSetsFalse);
 		System.out.println("=========================================================================\n");
 

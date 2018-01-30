@@ -17,13 +17,14 @@ public class Tile {
 		data = SessionAdapter.getInstance().loadNodeEntitiesByShotId(shotId);
 		this.shotId = shotId;
 	}
-	
+
 	// tests
 	private static long idCount = 1;
+
 	public Tile(int mockShotId, List<NodeEntity> data, boolean verbose) {
 		this.data = data;
 		this.shotId = mockShotId;
-		
+
 		for (NodeEntity ne : data) {
 			ne.setShotId((long) mockShotId);
 			ne.setId(idCount);

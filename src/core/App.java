@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import building_blocks.DEMReader;
 import building_blocks.DEMTile;
 import building_blocks.Graph;
 import building_blocks.Tile;
 import building_blocks.WriteOutputFile;
-import building_blocks.clustering.Clustering;
 import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
@@ -102,7 +102,7 @@ public class App {
 			}
 		}
 
-		fixDataset("< after build in loop completed >");
+		fixDataset("<after build in loop >");
 		graph.rebuildDataSet();
 		fixDataset("< after rebuild DataSet completed >");
 		graph.computeEdgeSizeAfterMerge();
@@ -112,6 +112,8 @@ public class App {
 		computeBoundsOfExistingNodes(graph);
 		
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
+		
+		compareListToSet(listedDataSet, graph.getRetrievableDataSet().keySet());
 
 		Collections.sort(listedDataSet); // by id
 
@@ -166,6 +168,9 @@ public class App {
 			System.out.println("Reading elevs");
 
 			for (NodeEntity node : listedDataSet) {
+				if(node == null){
+					System.err.println("App: NULL in listedDataSet");
+				}
 				DEMTile tile = nodeToDEMTile.get(node);
 				try {
 					elev = tile.getElev(node.getLat(), node.getLon());
@@ -200,7 +205,7 @@ public class App {
 			maxElev = minElev = elevAvg = MOCK_ELEV;
 		}
 		
-		performDatasetConsistencyTest();
+		visualTest(graph, maxElev, null);
 		
 		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
 		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
@@ -253,33 +258,13 @@ public class App {
 			throw new RuntimeException("performTestsOnTile");
 	}
 	
-	private void performDatasetConsistencyTest(){
-		int containsProblemListed = 0;
-		int containsProblemAdj = 0;
-		int notRenumberedListed = 0;
-		int notRenumberedAdj = 0;
-		Map<NodeEntity, NodeEntity> notRenumberedCulpritsParentToChild = new HashMap<NodeEntity, NodeEntity>();
-		for (NodeEntity ne : graph.getRetrievableDataSet().keySet()) {
-			if (!graph.getRetrievableDataSet().keySet().contains(ne)) {
-				containsProblemListed++;
+	private void compareListToSet(List<NodeEntity> list, Set<NodeEntity> set){
+		for(NodeEntity ne : list)
+			if(set.contains(ne) == false){
+				System.err.println("/n/n/ncompareListToSet: from list :/n" + ne + "/n/nset does not contain it");
 			}
-			if (ne.isRenumbered() == false) {
-				notRenumberedListed++;
-			}
-			for (NodeEntity neAdj : ne.getAdjacents()) {
-				if (!graph.getRetrievableDataSet().keySet().contains(neAdj)) {
-					containsProblemAdj++;
-				}
-				if (neAdj.isRenumbered() == false) {
-					notRenumberedAdj++;
-					notRenumberedCulpritsParentToChild.put(ne, neAdj);
-				}
-			}
-		}
-		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
-		visualTest(graph, maxElev, notRenumberedCulpritsParentToChild);
 	}
-
+	
 	/**
 	 * @param rawElev
 	 * @return
@@ -413,7 +398,7 @@ public class App {
 			printBounds();
 			throw new RuntimeException();
 		}
-		// assert (lat >= minLat && lat <= maxLat);
+		assert (lat >= minLat && lat <= maxLat);
 		double overlapLat = maxLat - lat;
 		double ratio = overlapLat / deltaLat;
 		int ret = ((int) (ratio * (double) PIC_HEIGHT_MAX_INDEX));
@@ -431,7 +416,7 @@ public class App {
 			printBounds();
 			throw new RuntimeException();
 		}
-		// assert (lon >= minLon && lon <= maxLon);
+		assert (lon >= minLon && lon <= maxLon);
 		double overlapLon = lon - minLon;
 		double ratio = overlapLon / deltaLon;
 		int ret = ((int) (ratio * (double) PIC_WIDTH_MAX_INDEX));
@@ -447,16 +432,6 @@ public class App {
 		System.out.println("maxLon " + maxLon);
 		System.out.println("deltaLat " + deltaLat);
 		System.out.println("deltaLon " + deltaLon);
-		System.out.println("=========================================================================\n");
-	}
-
-	private void printCheckDatasetConsistency(int listed, int adj, int notRenumberedL, int notRenumberedAdj) {
-		System.out.println("\n\n=========================================================================");
-		System.out.println("PRINT CHECK Dataset Consistency");
-		System.out.println("listedContainsProblem " + listed);
-		System.out.println("adjacentsContainsProblem " + adj);
-		System.out.println("notRenumberedProblemInListed " + notRenumberedL);
-		System.out.println("notRenumberedProblemInAdj " + notRenumberedAdj);
 		System.out.println("=========================================================================\n");
 	}
 

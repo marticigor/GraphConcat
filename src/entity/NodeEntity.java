@@ -1,6 +1,5 @@
 package entity;
 
-import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -46,7 +45,7 @@ public class NodeEntity implements Comparable<NodeEntity> {
 	private Set<NodeEntity> adjacents;
 
 	private transient short elev = App.MOCK_ELEV;
-	// Redundant. But verbose maybe better than (not so obvious) elev =
+	// Redundant. But verbose may be better than (not so obvious) elev =
 	// Short.MIN_VALUE
 	// not used so far
 	private transient boolean needsElevCorr = false;
@@ -157,7 +156,11 @@ public class NodeEntity implements Comparable<NodeEntity> {
 	public int hashCode() {
 		int lonFloored = (int) (lon * HASHCODE_MULTIPLICATION_LON_LAT);
 		int latFloored = (int) (lat * HASHCODE_MULTIPLICATION_LON_LAT);
-		return Objects.hash(lonFloored, latFloored);
+		//TODO figure out or ask StackOverflow why this failes sometimes
+		//return Objects.hash(lonFloored, latFloored);
+		
+		//this is the implementation
+		return Integer.hashCode(lonFloored * latFloored);
 	}
 
 	// OBJECT!!!
