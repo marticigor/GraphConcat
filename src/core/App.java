@@ -23,7 +23,7 @@ import lib_duke.LineMaker;
 import lib_duke.Pixel;
 import session.SessionAdapter;
 import test_mocks.MockTiles;
-import test_mocks.TestTile;
+import test_mocks.TileTester;
 //more data
 //http://www.dis.uniroma1.it/challenge9/download.shtml
 
@@ -50,7 +50,7 @@ public class App {
 	private double deltaLat, deltaLon;
 	public static final int PIC_WIDTH_MAX_INDEX = 799;
 	public static final int PIC_HEIGHT_MAX_INDEX = 599;
-
+	
 	public static void main(String args[]) {
 		App app = new App();
 		// app.veryBasicTest();
@@ -82,55 +82,35 @@ public class App {
 		int maxShotId = nmbOfShots - 1;
 		System.out.println("NmbOfShots " + nmbOfShots + " maxShotId " + maxShotId);
 
-		boolean tests = false;
-
 		if (MOCKS) {
-			TestTile tt = new TestTile();
 			MockTiles mt = new MockTiles();
 			for (Tile tile : mt.getTiles()) {
 				printTileInfo(tile, tile.getShotId());
-				tests = tt.testTile(tile);
-				System.out.println("TESTS " + tests);
-				assert (tests == true);
+				// if smth goes wrong, throw exception, no attempt to fix
+				performTestsOnTile("mocks", tile);
 				graph.buildIn(tile);
 			}
 
 		} else {
 			// iterate regular tiles
-			TestTile tt = new TestTile();
 			for (int shot = 0; shot <= maxShotId; shot++) {
 				Tile tile = new Tile(shot);
 				printTileInfo(tile, shot);
-				tests = tt.testTile(tile);
-				System.out.println("TESTS " + tests);
-				assert (tests == true);
+				// if smth goes wrong, throw exception, no attempt to fix
+				performTestsOnTile("regular tile", tile);
 				graph.buildIn(tile);
 			}
 		}
 
-		tests = performTestsOnDataset("< after build in loop completed >");
-		assert (tests == true);
-
+		fixDataset("< after build in loop completed >");
 		graph.rebuildDataSet();
-		computeBoundsOfExistingNodes(graph);
-
-		tests = performTestsOnDataset("< after rebuild DataSet completed >");
-		if (tests == false) {
-			if (this.culprits == null)
-				throw new RuntimeException("null culprits when data expected");
-			visualizeListCulprits(this.culprits);
-		}
-
-		assert (tests == true);
-
+		fixDataset("< after rebuild DataSet completed >");
 		graph.computeEdgeSizeAfterMerge();
 		graph.prune();
 		graph.computeEdgeSizeAfterPrune();
+		fixDataset("< after prune DataSet completed >");
 		computeBoundsOfExistingNodes(graph);
-
-		tests = performTestsOnDataset("< after prune DataSet completed >");
-		assert (tests == true);
-
+		
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());
 
 		Collections.sort(listedDataSet); // by id
@@ -142,31 +122,6 @@ public class App {
 			renumberedId++;
 		}
 
-		// DATASET CONSISTENCY CHECK
-		int containsProblemListed = 0;
-		int containsProblemAdj = 0;
-		int notRenumberedListed = 0;
-		int notRenumberedAdj = 0;
-		Map<NodeEntity, NodeEntity> notRenumberedCulpritsParentToChild = new HashMap<NodeEntity, NodeEntity>();
-		for (NodeEntity ne : graph.getRetrievableDataSet().keySet()) {
-			if (!graph.getRetrievableDataSet().keySet().contains(ne)) {
-				containsProblemListed++;
-			}
-			if (ne.isRenumbered() == false) {
-				notRenumberedListed++;
-			}
-			for (NodeEntity neAdj : ne.getAdjacents()) {
-				if (!graph.getRetrievableDataSet().keySet().contains(neAdj)) {
-					containsProblemAdj++;
-				}
-				if (neAdj.isRenumbered() == false) {
-					notRenumberedAdj++;
-					notRenumberedCulpritsParentToChild.put(ne, neAdj);
-				}
-			}
-		}
-
-		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
 		graph.printStats();
 
 		// now clustering
@@ -244,8 +199,9 @@ public class App {
 		if (MOCKS) {
 			maxElev = minElev = elevAvg = MOCK_ELEV;
 		}
-		visualTest(graph, maxElev, notRenumberedCulpritsParentToChild);
-
+		
+		performDatasetConsistencyTest();
+		
 		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
 		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
 		try {
@@ -257,19 +213,71 @@ public class App {
 		System.out.println("FINISHED");
 	}// compose
 
-	private List<NodeEntity> culprits;
+	private void fixDataset(String stageOfAlgo) {
+		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+		System.out.println("fixDataset, stage: " + stageOfAlgo);
+		TileTester tester = new TileTester();
+		boolean testZero = tester.mapAdapterTestZeroAdj(graph.getRetrievableDataSet());
+		if (testZero == false) {
+			int culpritsSize = tester.getCulprits().size();
+			assert (culpritsSize > 0);
+			for (NodeEntity culprit : tester.getCulprits()) {
+				graph.removeNodeEntity(culprit);
+			}
+			System.out.println("zeroAdj nodes removed: " + culpritsSize);
+		}
 
-	/**
-	 * 
-	 * @param stageOfAlgo
-	 * @return
-	 */
-	private boolean performTestsOnDataset(String stageOfAlgo) {
-		TestTile testMap = new TestTile();
-		boolean tests = testMap.mapAdapter(graph.getRetrievableDataSet());
-		this.culprits = testMap.getCulprits();
-		System.out.println("TESTS after " + stageOfAlgo + " : " + tests + "\n\n");
-		return tests;
+		tester.resetCulprits();
+
+		boolean testMutualVis = tester.mapAdapterTestMutualVisibility(graph.getRetrievableDataSet());
+		if (testMutualVis == false) {
+			int culpritsSize = tester.getCulprits().size();
+			assert (culpritsSize > 0);
+			int newEdges  = graph.fixMutualVisibility();
+			System.out.println("newEdges by fixMutualVisibility: " + newEdges);
+		}
+		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+	}
+
+	private void performTestsOnTile(String stageOfAlgo, Tile tile) {
+		TileTester tt = new TileTester();
+		boolean testsZero = tt.testZeroAdj(tile);
+		boolean testsMutualVis = tt.testMutualVisibility(tile);
+		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+		System.out.println("performTestsOnTile, stage: " + stageOfAlgo);
+		System.out.println("testsZero: " + testsZero);
+		System.out.println("testsMutualVis: " + testsMutualVis);
+		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
+		if ((testsZero == true && testsMutualVis == true) == false)
+			throw new RuntimeException("performTestsOnTile");
+	}
+	
+	private void performDatasetConsistencyTest(){
+		int containsProblemListed = 0;
+		int containsProblemAdj = 0;
+		int notRenumberedListed = 0;
+		int notRenumberedAdj = 0;
+		Map<NodeEntity, NodeEntity> notRenumberedCulpritsParentToChild = new HashMap<NodeEntity, NodeEntity>();
+		for (NodeEntity ne : graph.getRetrievableDataSet().keySet()) {
+			if (!graph.getRetrievableDataSet().keySet().contains(ne)) {
+				containsProblemListed++;
+			}
+			if (ne.isRenumbered() == false) {
+				notRenumberedListed++;
+			}
+			for (NodeEntity neAdj : ne.getAdjacents()) {
+				if (!graph.getRetrievableDataSet().keySet().contains(neAdj)) {
+					containsProblemAdj++;
+				}
+				if (neAdj.isRenumbered() == false) {
+					notRenumberedAdj++;
+					notRenumberedCulpritsParentToChild.put(ne, neAdj);
+				}
+			}
+		}
+		printCheckDatasetConsistency(containsProblemListed, containsProblemAdj, notRenumberedListed, notRenumberedAdj);
+		visualTest(graph, maxElev, notRenumberedCulpritsParentToChild);
 	}
 
 	/**
@@ -330,7 +338,7 @@ public class App {
 		ir.draw();
 
 		try {
-			Thread.sleep(15000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 			throw new RuntimeException("interupt1");
@@ -374,6 +382,7 @@ public class App {
 		ir.draw();
 	}
 
+	@SuppressWarnings("unused")
 	private void visualizeListCulprits(List<NodeEntity> culprits) {
 		ImageResource image = new ImageResource(PIC_WIDTH_MAX_INDEX + 1, PIC_HEIGHT_MAX_INDEX + 1);
 		for (NodeEntity n : culprits) {
@@ -404,7 +413,7 @@ public class App {
 			printBounds();
 			throw new RuntimeException();
 		}
-		//assert (lat >= minLat && lat <= maxLat);
+		// assert (lat >= minLat && lat <= maxLat);
 		double overlapLat = maxLat - lat;
 		double ratio = overlapLat / deltaLat;
 		int ret = ((int) (ratio * (double) PIC_HEIGHT_MAX_INDEX));

@@ -17,7 +17,7 @@ import core.App;
 
 @Entity
 @Table(name = DB_names.TABLE_NODES)
-public class NodeEntity implements Comparable <NodeEntity>{
+public class NodeEntity implements Comparable<NodeEntity> {
 
 	// graph format
 	// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
@@ -46,17 +46,18 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	private Set<NodeEntity> adjacents;
 
 	private transient short elev = App.MOCK_ELEV;
-	//Redundant. But verbose maybe better than (not so obvious) elev = Short.MIN_VALUE
-	//not used so far
+	// Redundant. But verbose maybe better than (not so obvious) elev =
+	// Short.MIN_VALUE
+	// not used so far
 	private transient boolean needsElevCorr = false;
-	
-	//very very important
+
+	// very very important
 	private static final transient int HASHCODE_MULTIPLICATION_LON_LAT = 10000;
-	
+
 	private transient boolean renumbered = false;
-	
+
 	public transient VisitedStatus visitedStatus = VisitedStatus.UNVISITED;
-	
+
 	private transient long idCLuster;
 
 	public NodeEntity() {
@@ -72,6 +73,12 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	public void addToAdj(NodeEntity adj) {
 		adjacents.add(adj);
+	}
+
+	public void removeFromAdjacents(NodeEntity ne) {
+		if (!this.adjacents.contains(ne))
+			throw new RuntimeException("removeFromAdjacents: this NodeEntity does not contain NE asked to remove");
+		else this.adjacents.remove(ne);
 	}
 
 	public long getId() {
@@ -113,7 +120,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	public void setLat(double l) {
 		this.lat = l;
 	}
-	
+
 	public short getWeight() {
 		return weight;
 	}
@@ -137,7 +144,7 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	public void setNeedsElevCorr(boolean needsElevCorr) {
 		this.needsElevCorr = needsElevCorr;
 	}
-	
+
 	public Set<NodeEntity> getAdjacents() {
 		return adjacents;
 	}
@@ -148,8 +155,8 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int hashCode() {
-		int lonFloored = (int)(lon * HASHCODE_MULTIPLICATION_LON_LAT);
-		int latFloored = (int)(lat * HASHCODE_MULTIPLICATION_LON_LAT);
+		int lonFloored = (int) (lon * HASHCODE_MULTIPLICATION_LON_LAT);
+		int latFloored = (int) (lat * HASHCODE_MULTIPLICATION_LON_LAT);
 		return Objects.hash(lonFloored, latFloored);
 	}
 
@@ -178,22 +185,24 @@ public class NodeEntity implements Comparable <NodeEntity>{
 	 * @return
 	 */
 	public boolean equalsLonLat(NodeEntity theOther) {
-		boolean lonB = (((int)(this.lon * HASHCODE_MULTIPLICATION_LON_LAT)) == ((int)(theOther.lon * HASHCODE_MULTIPLICATION_LON_LAT)));
-		boolean latB = (((int)(this.lat * HASHCODE_MULTIPLICATION_LON_LAT)) == ((int)(theOther.lat * HASHCODE_MULTIPLICATION_LON_LAT)));
+		boolean lonB = (((int) (this.lon * HASHCODE_MULTIPLICATION_LON_LAT)) == ((int) (theOther.lon
+				* HASHCODE_MULTIPLICATION_LON_LAT)));
+		boolean latB = (((int) (this.lat * HASHCODE_MULTIPLICATION_LON_LAT)) == ((int) (theOther.lat
+				* HASHCODE_MULTIPLICATION_LON_LAT)));
 		return lonB && latB;
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder sb  = new StringBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append("\nN O D E    E N T I T Y\n");
-		sb.append("|id ").append(id).append(" |shotId ").append(shotId).append(" |lon ").append(lon)
-		.append(" |lat ").append(lat).append("\n");
+		sb.append("|id ").append(id).append(" |shotId ").append(shotId).append(" |lon ").append(lon).append(" |lat ")
+				.append(lat).append("\n");
 		sb.append("|weight ").append(weight).append(" |elev ").append(elev);
 		sb.append("\n|hashCode(): ").append(hashCode());
 		sb.append("\n RENUMBERED = " + renumbered);
 		sb.append("\n\tadjacents:").append(adjacents.size()).append("\n");
-		
+
 		for (NodeEntity n : adjacents) {
 			if (n == this) {
 				System.err.println("!!! reference to this in adjacents in NodeEntity.toString()");
@@ -213,10 +222,10 @@ public class NodeEntity implements Comparable <NodeEntity>{
 
 	@Override
 	public int compareTo(NodeEntity theOther) {
-		
+
 		Long myId = new Long(this.id);
 		Long hisId = new Long(theOther.getId());
-		
+
 		return myId.compareTo(hisId);
 	}
 

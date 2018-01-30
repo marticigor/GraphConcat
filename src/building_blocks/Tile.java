@@ -31,7 +31,6 @@ public class Tile {
 		}
 		if (verbose)
 			testDumpData();
-		System.out.println("\n\nTEST CONSTRUCTOR TILE");
 	}
 
 	public List<NodeEntity> getData() {

@@ -96,12 +96,10 @@ public class Graph {
 			}
 			current.setAdjacents(newAdj);
 		}
-		// https://www.dropbox.com/s/mqijzl4vwzg0zjj/2018-01-11%2010.15.46.jpg?dl=0
-		int fixed = fixMutualVisibility(retrievableDataSet);
+		
 		System.out.println("\n\n=========================================================================");
-		System.err.println("REBUILD DATASET: FixedEdges (mutual visibility): " + fixed);
-		System.err.println("REBUILD DATASET: From left came Null: " + nullFromLeft);
-		System.err.println("REBUILD DATASET: Compare sets false: " + compareSetsFalse);
+		System.out.println("REBUILD DATASET: From left came Null: " + nullFromLeft);
+		System.out.println("REBUILD DATASET: Compare sets false: " + compareSetsFalse);
 		System.out.println("=========================================================================\n");
 
 		mergedSize = this.getDatasetSize();
@@ -112,13 +110,13 @@ public class Graph {
 	 * https://www.dropbox.com/s/mqijzl4vwzg0zjj/2018-01-11%2010.15.46.jpg?dl=0
 	 * 
 	 */
-	private int fixMutualVisibility(Map<NodeEntity, NodeEntity> dataset) {
+	public int fixMutualVisibility() {
 		Set<NodeEntity> leftAdj;
 		Set<NodeEntity> rightAdj;
 		int refSelf = 0;
 
 		int newEdges = 0;
-		for (NodeEntity left : dataset.keySet()) {
+		for (NodeEntity left : retrievableDataSet.keySet()) {
 			leftAdj = left.getAdjacents();
 			if (leftAdj.contains(left)) {
 				leftAdj.remove(left);
@@ -132,8 +130,15 @@ public class Graph {
 				}
 			}
 		}
-		System.err.println("FIX MUTUAL VISIBILITY: Reference to itself: " + refSelf);
+		System.out.println("FIX MUTUAL VISIBILITY: Reference to itself: " + refSelf);
 		return newEdges;
+	}
+	
+	public void removeNodeEntity(NodeEntity ne){
+		for(NodeEntity adj : ne.getAdjacents()){
+			adj.removeFromAdjacents(ne);
+		}
+		retrievableDataSet.remove(ne);
 	}
 
 	/**
