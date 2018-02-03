@@ -27,8 +27,10 @@ import test_mocks.TileTester;
 //more data
 //http://www.dis.uniroma1.it/challenge9/download.shtml
 
-// graph format
-// https://www.dropbox.com/s/cpaidvxzisyic4d/2017-12-30%2021.54.47.jpg?dl=0
+//metadata file format:
+//  528|174|305|49.8890337397|50.1461788264|14.2016829361|14.7505701889
+//  222203|716776
+
 
 public class App {
 
@@ -40,7 +42,7 @@ public class App {
 	// output
 	private final static String PATH = "/home/radim/shutter_shots/okoliPrahyII";
 
-	private final static String NAME = "test1";
+	private final static String NAME = "test_project";
 
 	public final static boolean DEVELOPMENT = false;
 	public final static boolean VERBOSE = false;
@@ -117,7 +119,7 @@ public class App {
 
 		Collections.sort(listedDataSet); // by id
 
-		long renumberedId = 1;
+		long renumberedId = 0;
 		for (NodeEntity ne : listedDataSet) {
 			ne.setId(renumberedId);
 			ne.setRenumbered(true);
@@ -207,8 +209,8 @@ public class App {
 		
 		visualTest(graph, maxElev, null);
 		
-		System.out.println("\n\nWriting: " + PATH + File.separator + NAME + WriteOutputFile.EXTENSION);
 		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
+		
 		try {
 			wof.write();
 		} catch (IOException e) {
