@@ -17,10 +17,13 @@ import utils.FormatDouble;
 import utils.Haversine;
 
 //metadata file format:
+
 //528|174|305|49.8890337397|50.1461788264|14.2016829361|14.7505701889
 //222203|716776
+//2 //VALUE_RTE_TYPE_CYCLE
+//description
 
-public class WriteOutputFile {
+public class WriteOutputFiles {
 
 	public final static String EXTENSION_META = ".txt";
 	public final static String EXTENSION_DATA = ".DAT";
@@ -30,7 +33,7 @@ public class WriteOutputFile {
 	private Graph graph; // ask him about sizes already computed;
 	private App app; // ask him about metadata already computed;
 
-	public WriteOutputFile(String thePath, String theName, List<NodeEntity> theDataSet, Graph theGraph, App theApp) {
+	public WriteOutputFiles(String thePath, String theName, List<NodeEntity> theDataSet, Graph theGraph, App theApp) {
 		this.path = thePath;
 		this.project = theName;
 		this.dataSet = theDataSet;
@@ -59,14 +62,22 @@ public class WriteOutputFile {
 		System.out.println("\n\nWriting into directory: " + directoryName);
 		System.out.println("Writing metadata: " + outputMetadata.toString());
 		// write metadata
-		String metadata = app.maxElev + SEP + app.minElev + SEP + app.elevAvg + SEP
+		String bounds = app.maxElev + SEP + app.minElev + SEP + app.elevAvg + SEP
 				+ FormatDouble.formatDouble10(app.minLat) + SEP + FormatDouble.formatDouble10(app.maxLat) + SEP
 				+ FormatDouble.formatDouble10(app.minLon) + SEP + FormatDouble.formatDouble10(app.maxLon);
-		bw.write(metadata);
+		bw.write(bounds);
 		bw.newLine();
 		// write graphStats
 		String stats = graph.getDatasetSize() + SEP + graph.getEdgeSizeAfterPrune();
 		bw.write(stats);
+		bw.newLine();
+		// write routing type
+		String type = String.valueOf(App.TYPE);
+		bw.write(type);
+		bw.newLine();
+		//write description
+		String description = App.DESRIPTION;
+		bw.write(description);
 
 		bw.close();
 		fos.close();
@@ -101,7 +112,7 @@ public class WriteOutputFile {
 				System.out.print(" lon:" + ne.getLon());
 			c++;
 		}
-		
+
 		System.out.println("\n");
 
 		// build edges data
@@ -179,4 +190,35 @@ public class WriteOutputFile {
 		}
 		output.close();
 	}
+
+	// COPY PASTED FROM LOCUS API
+
+	// ROUTE TYPES DEFINED IN PARAMETER 'PAR_RTE_COMPUTE_TYPE'
+
+	public static final int VALUE_RTE_TYPE_GENERATED = -1;
+
+	public static final int VALUE_RTE_TYPE_NO_TYPE = 100;
+	public static final int VALUE_RTE_TYPE_CAR = 6;
+	public static final int VALUE_RTE_TYPE_CAR_FAST = 0;
+	public static final int VALUE_RTE_TYPE_CAR_SHORT = 1;
+	public static final int VALUE_RTE_TYPE_MOTORCYCLE = 7;
+	public static final int VALUE_RTE_TYPE_CYCLE = 2;
+	public static final int VALUE_RTE_TYPE_CYCLE_FAST = 4;
+	public static final int VALUE_RTE_TYPE_CYCLE_SHORT = 5;
+	public static final int VALUE_RTE_TYPE_CYCLE_MTB = 8;
+	public static final int VALUE_RTE_TYPE_CYCLE_RACING = 9;
+	// basic routing profile, type "walk"
+	public static final int VALUE_RTE_TYPE_FOOT_01 = 3;
+	// routing profile usually used for "hiking"
+	public static final int VALUE_RTE_TYPE_FOOT_02 = 10;
+	// routing profile usually used for "climb" or "mountain hiking"
+	public static final int VALUE_RTE_TYPE_FOOT_03 = 11;
+
+	/**
+	 * All possible RTE_TYPES also sorted in correct order.
+	 */
+	public static final int[] RTE_TYPES_SORTED = new int[] { VALUE_RTE_TYPE_NO_TYPE, VALUE_RTE_TYPE_CAR,
+			VALUE_RTE_TYPE_CAR_FAST, VALUE_RTE_TYPE_CAR_SHORT, VALUE_RTE_TYPE_MOTORCYCLE, VALUE_RTE_TYPE_CYCLE,
+			VALUE_RTE_TYPE_CYCLE_FAST, VALUE_RTE_TYPE_CYCLE_SHORT, VALUE_RTE_TYPE_CYCLE_MTB,
+			VALUE_RTE_TYPE_CYCLE_RACING, VALUE_RTE_TYPE_FOOT_01, VALUE_RTE_TYPE_FOOT_02, VALUE_RTE_TYPE_FOOT_03, };
 }

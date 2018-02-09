@@ -1,6 +1,5 @@
 package core;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +13,8 @@ import building_blocks.DEMReader;
 import building_blocks.DEMTile;
 import building_blocks.Graph;
 import building_blocks.Tile;
-import building_blocks.WriteOutputFile;
+import building_blocks.WriteOutputFiles;
+import building_blocks.clustering.Clustering;
 import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
@@ -40,18 +40,21 @@ public class App {
 	public static final short MOCK_ELEV = 333;
 
 	// output
+	//===========================================================================
 	private final static String PATH = "/home/radim/shutter_shots/okoliPrahyII";
-
 	private final static String NAME = "test_project";
-
+	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_CYCLE;
+	public static final String DESRIPTION = "testing basic cycling routing where I live";
+	//===========================================================================
+	
 	public final static boolean DEVELOPMENT = false;
 	public final static boolean VERBOSE = false;
 	public final static boolean MOCKS = false;
 
 	public double minLon = 1000.0, maxLon = -1000.0, minLat = 1000.0, maxLat = -1000.0;
 	private double deltaLat, deltaLon;
-	public static final int PIC_WIDTH_MAX_INDEX = 799;
-	public static final int PIC_HEIGHT_MAX_INDEX = 599;
+	public static final int PIC_WIDTH_MAX_INDEX = 1279;//1280/720 resolution
+	public static final int PIC_HEIGHT_MAX_INDEX = 719;
 	
 	public static void main(String args[]) {
 		App app = new App();
@@ -130,13 +133,13 @@ public class App {
 
 		// now clustering
 
-		// Clustering clustering = new Clustering(graph, this);
-		// long clusteringStart = System.currentTimeMillis();
-		// clustering.doInit();
-		// clustering.clusterize();
-		// long clusteringFinish = System.currentTimeMillis();
-		// System.out.println("\n\nClustering time: " + clusteringFinish +
-		// clusteringStart);
+		Clustering clustering = new Clustering(graph, this);
+		long clusteringStart = System.currentTimeMillis();
+		clustering.doInit();
+		clustering.clusterize();
+		long clusteringFinish = System.currentTimeMillis();
+		System.out.println("\n\nClustering time: " + clusteringFinish +
+		clusteringStart);
 
 		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
@@ -209,7 +212,7 @@ public class App {
 		
 		visualTest(graph, maxElev, null);
 		
-		WriteOutputFile wof = new WriteOutputFile(PATH, NAME, listedDataSet, graph, this);
+		WriteOutputFiles wof = new WriteOutputFiles(PATH, NAME, listedDataSet, graph, this);
 		
 		try {
 			wof.write();
