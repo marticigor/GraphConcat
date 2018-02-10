@@ -17,7 +17,7 @@ import core.App;
 import entity.NodeEntity;
 import lib_duke.ImageResource;
 import lib_duke.Pixel;
-import utils.Haversine;
+import utils.geospatial.Haversine;
 
 public class Clustering {
 

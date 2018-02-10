@@ -49,6 +49,7 @@ public class NodeEntity implements Comparable<NodeEntity> {
 	// Short.MIN_VALUE
 	// not used so far
 	private transient boolean needsElevCorr = false;
+	private transient boolean availableForCutConsideration = true;
 
 	// very very important
 	private static final transient int HASHCODE_MULTIPLICATION_LON_LAT = 10000;
@@ -150,6 +151,14 @@ public class NodeEntity implements Comparable<NodeEntity> {
 
 	public void setAdjacents(Set<NodeEntity> adj) {
 		this.adjacents = adj;
+	}
+	
+	public boolean isAvailableForCutConsideration() {
+		return availableForCutConsideration;
+	}
+	
+	public void setAvailableForCutConsideration(boolean isIt) {
+		availableForCutConsideration = isIt;
 	}
 
 	@Override

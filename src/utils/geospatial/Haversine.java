@@ -1,4 +1,4 @@
-package utils;
+package utils.geospatial;
 
 public class Haversine {
 

@@ -16,6 +16,8 @@ import entity.VisitedStatus;
 import lib_duke.ImageResource;
 import lib_duke.LineMaker;
 import lib_duke.Pixel;
+import utils.geospatial.Bearing;
+import utils.geospatial.Haversine;
 
 // graph format
 // https://www.dropbox.com/s/r4ixnibea713d9p/2018-01-24%2008.45.44.jpg?dl=0
@@ -27,9 +29,11 @@ public class Graph {
 	private int edgeSizeAfterMerge;
 	private int mergedSize;
 	private int edgeSizeAfterPrune;
+	private int edgeSizeAfterCut;
 	private int sizeProblem, containsProblem;
 	private int weightUpdated;
 	private int prunedOut;
+	private int cutOut;
 	private ImageResource visual;
 	private LineMaker line = new LineMaker(visual);
 	private App app;
@@ -37,6 +41,8 @@ public class Graph {
 	private List<NodeEntity> playRight = new ArrayList<NodeEntity>();
 	private List<NodeEntity> matchFound = new ArrayList<NodeEntity>();
 	private static final int PRUNE_THRESHOLD = 200;
+	private static final double CONSIDER_ALLIGNED_NODES_CUT_UP_TO_DIST = 200.0;//metres
+	private static final double DIFF_ANGLE_BEARING_TO_NODES_CUT = 20.0;//degrees
 
 	public Graph(App app) {
 		this.app = app;
@@ -201,6 +207,48 @@ public class Graph {
 		System.out.println("PRUNE results: survived: " + survived + " pruned: " + pruned);
 		this.prunedOut = pruned;
 	}
+	
+	public void cutUnnecesarryAlignedNodes() {
+		for (NodeEntity ne : retrievableDataSet.keySet()) {
+			if(ne.getAdjacents().size() == 2) {
+				NodeEntity[] adj = ne.getAdjacents().toArray(new NodeEntity[2]);
+				NodeEntity start = adj[0];
+				NodeEntity middle = ne;
+				NodeEntity end = adj[1];
+				double distStMid = Haversine.haversineInM(start.getLat(), start.getLon(),
+						middle.getLat(), middle.getLon());
+				double distMidEnd = Haversine.haversineInM(middle.getLat(), middle.getLon(),
+						end.getLat(), end.getLon());
+				if(distStMid + distMidEnd < CONSIDER_ALLIGNED_NODES_CUT_UP_TO_DIST) {
+					double bearingMidSt = Bearing.getBearing(middle.getLat(), middle.getLon(),
+							start.getLat(), start.getLon());
+					double bearingMidEnd = Bearing.getBearing(middle.getLat(), middle.getLon(),
+							end.getLat(), end.getLon());
+					double pointer = bearingMidSt;
+					double expectedOponnent = (pointer + 180) % 360d;
+					double marginLow = expectedOponnent - (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2d);
+					double marginUp = expectedOponnent + (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2d);
+					double marginLowClipped = clipDegrees(marginLow);
+					double marginUpClipped = clipDegrees(marginUp);
+
+				}
+			}
+		}
+	}
+	
+	private double clipDegrees(double value) {
+		double ret = 0;
+		if(value > 360) ret =  value % 360d;
+		if(value < 0) ret = 360 + (value % 360d); //negative value performs -
+		assert(ret > 0 && ret < 360d);
+		return ret;
+	}
+	
+	public void resetCutAvailability() {
+		for (NodeEntity ne : retrievableDataSet.keySet()) {
+			ne.setAvailableForCutConsideration(true);
+		}
+	}
 
 	private void markBunchOfNodesWithStatus(Iterable<NodeEntity> iterable, VisitedStatus status) {
 		Iterator<NodeEntity> i = iterable.iterator();
@@ -216,6 +264,10 @@ public class Graph {
 
 	public void computeEdgeSizeAfterPrune() {
 		this.edgeSizeAfterPrune = countAdjacents();
+	}
+	
+	public void computeEdgeSizeAfterCut() {
+		this.edgeSizeAfterCut = countAdjacents();
 	}
 
 	private int countAdjacents() {
@@ -253,6 +305,10 @@ public class Graph {
 	public int getEdgeSizeAfterPrune() {
 		return edgeSizeAfterPrune;
 	}
+	
+	public int getEdgeSizeAfterCut() {
+		return edgeSizeAfterCut;
+	}
 
 	public int getSizeProblem() {
 		return sizeProblem;
@@ -278,10 +334,15 @@ public class Graph {
 		System.out.println("Merged number of nodes: " + this.mergedSize);
 		System.out.println("EdgeSize before merge: " + this.getEdgeSizeNoMerge());
 		System.out.println("EdgeSize after merge: " + this.getEdgeSizeAfterMerge());
-		System.out.println("Weights updated: " + this.weightUpdated);
+		System.out.println("--");
 		System.out.println("Nodes removed by prune procedure: " + this.prunedOut);
-		System.out.println("Pruned number of nodes: " + this.getDatasetSize());
 		System.out.println("EdgeSize after prune: " + this.getEdgeSizeAfterPrune());
+		System.out.println("--");
+		System.out.println("Nodes removed by cut procedure: " + this.cutOut);
+		System.out.println("EdgeSize after cut: " + this.getEdgeSizeAfterCut());
+		System.out.println("--");
+		System.out.println("Weights updated: " + this.weightUpdated);
+		System.out.println("Final number of nodes: " + this.getDatasetSize());
 		System.out.println("=========================================================================\n");
 	}
 

@@ -114,6 +114,17 @@ public class App {
 		graph.prune();
 		graph.computeEdgeSizeAfterPrune();
 		fixDataset("< after prune DataSet completed >");
+		
+		//perform aligned nodes not necessary transform n-times
+		int n = 2;
+		for(int i = 0; i < n; i++) {
+			graph.cutUnnecesarryAlignedNodes();
+			graph.resetCutAvailability();
+		}
+		fixDataset("< after cut DataSet completed >");
+		
+		graph.computeEdgeSizeAfterCut();
+		
 		computeBoundsOfExistingNodes(graph);
 		
 		List<NodeEntity> listedDataSet = new ArrayList<NodeEntity>(graph.getRetrievableDataSet().keySet());

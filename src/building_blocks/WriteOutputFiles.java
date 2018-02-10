@@ -14,7 +14,7 @@ import java.util.List;
 import core.App;
 import entity.NodeEntity;
 import utils.FormatDouble;
-import utils.Haversine;
+import utils.geospatial.Haversine;
 
 //metadata file format:
 
