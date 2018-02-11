@@ -133,7 +133,7 @@ public class WriteOutputFiles {
 				assertionCounter++;
 			}
 		}
-		assert (graph.getEdgeSizeAfterPrune() == assertionCounter);
+		assert (graph.getEdgeSizeAfterCut() == assertionCounter);
 
 		String dirSepProj = directoryName + File.separator + project;
 

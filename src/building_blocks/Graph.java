@@ -41,7 +41,7 @@ public class Graph {
 	private List<NodeEntity> playRight = new ArrayList<NodeEntity>();
 	private List<NodeEntity> matchFound = new ArrayList<NodeEntity>();
 	private static final int PRUNE_THRESHOLD = 200;
-	private static final double CONSIDER_ALLIGNED_NODES_CUT_UP_TO_DIST = 200.0;//metres
+	private static final double CONSIDER_ALLIGNED_NODES_CUT_UP_TO_DIST = 180.0;//metres
 	private static final double DIFF_ANGLE_BEARING_TO_NODES_CUT = 20.0;//degrees
 
 	public Graph(App app) {
@@ -140,9 +140,17 @@ public class Graph {
 		return newEdges;
 	}
 	
+	/*
+	 * remove nodes that survived prune and are part of net structure
+	 */
 	public void removeNodeEntity(NodeEntity ne){
-		for(NodeEntity adj : ne.getAdjacents()){
-			adj.removeFromAdjacents(ne);
+		assert(retrievableDataSet.containsKey(ne));
+		for(NodeEntity adjNe : ne.getAdjacents()) {
+			assert(adjNe.getAdjacents().contains(ne));
+			//assertion may be switched off
+			if(adjNe.getAdjacents().contains(ne)) {
+				adjNe.getAdjacents().remove(ne);
+			}
 		}
 		retrievableDataSet.remove(ne);
 	}
@@ -208,9 +216,24 @@ public class Graph {
 		this.prunedOut = pruned;
 	}
 	
+	List <NodeEntity> starts = new LinkedList<NodeEntity>();
+	List <NodeEntity> middles = new LinkedList<NodeEntity>();
+	List <NodeEntity> ends = new LinkedList<NodeEntity>();
+	
 	public void cutUnnecesarryAlignedNodes() {
+	
+		assert(starts.size() == 0);
+		assert(middles.size() == 0);
+		assert(ends.size() == 0);
+		
+		int cutThisRound = 0;
+		
 		for (NodeEntity ne : retrievableDataSet.keySet()) {
-			if(ne.getAdjacents().size() == 2) {
+			if(
+					ne.getAdjacents().size() == 2 &&
+					ne.isAvailableForCutConsideration() &&
+					allAdjacentsAreAvailableForCutConsideration(ne)
+															){
 				NodeEntity[] adj = ne.getAdjacents().toArray(new NodeEntity[2]);
 				NodeEntity start = adj[0];
 				NodeEntity middle = ne;
@@ -219,35 +242,67 @@ public class Graph {
 						middle.getLat(), middle.getLon());
 				double distMidEnd = Haversine.haversineInM(middle.getLat(), middle.getLon(),
 						end.getLat(), end.getLon());
-				if(distStMid + distMidEnd < CONSIDER_ALLIGNED_NODES_CUT_UP_TO_DIST) {
+				if((distStMid + distMidEnd) < CONSIDER_ALLIGNED_NODES_CUT_UP_TO_DIST) {
 					double bearingMidSt = Bearing.getBearing(middle.getLat(), middle.getLon(),
 							start.getLat(), start.getLon());
 					double bearingMidEnd = Bearing.getBearing(middle.getLat(), middle.getLon(),
 							end.getLat(), end.getLon());
+					//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+					//System.out.println("--------bearingMidSt: " + bearingMidSt + " bearingMidEnd: " + bearingMidEnd);
+					//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					double pointer = bearingMidSt;
-					double expectedOponnent = (pointer + 180) % 360d;
-					double marginLow = expectedOponnent - (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2d);
-					double marginUp = expectedOponnent + (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2d);
-					double marginLowClipped = clipDegrees(marginLow);
-					double marginUpClipped = clipDegrees(marginUp);
-
+					double pointerOponnent = (pointer + 180) % 360d;
+					//System.out.println("pointer " + pointer);
+					//System.out.println("opponent "+ expectedOponnent);
+					double marginLow = pointerOponnent - (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2.0);
+					double marginUp = pointerOponnent + (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2.0);
+					double marginLowClipped = Bearing.clipDegrees(marginLow);
+					double marginUpClipped = Bearing.clipDegrees(marginUp);
+					if(bearingMidEnd > marginLowClipped && bearingMidEnd < marginUpClipped) {
+						cutOut ++;
+						cutThisRound ++;
+						starts.add(start);
+						middles.add(middle);
+						ends.add(end);
+						start.setAvailableForCutConsideration(false);
+						middle.setAvailableForCutConsideration(false);
+						end.setAvailableForCutConsideration(false);
+					}
 				}
 			}
 		}
+		System.out.println("CUT PROCEDURE: this round cut: " + cutThisRound);
+		assert(starts.size() == middles.size() && middles.size() == ends.size());
+		for(int i = 0; i < starts.size(); i ++) {
+			performCut(starts.get(i), middles.get(i), ends.get(i));
+		}
 	}
 	
-	private double clipDegrees(double value) {
-		double ret = 0;
-		if(value > 360) ret =  value % 360d;
-		if(value < 0) ret = 360 + (value % 360d); //negative value performs -
-		assert(ret > 0 && ret < 360d);
-		return ret;
+	private boolean allAdjacentsAreAvailableForCutConsideration(NodeEntity ne) {
+		for(NodeEntity adj : ne.getAdjacents()) {
+			if(adj.isAvailableForCutConsideration() == false) return false;
+		}
+		return true;
+	}
+	
+	private void performCut(NodeEntity start, NodeEntity middle, NodeEntity end) {
+		assert(middle.getAdjacents().size() == 2);
+		assert(start.getAdjacents().contains(middle));
+		assert(end.getAdjacents().contains(middle));
+		
+		if(!start.getAdjacents().contains(end))start.getAdjacents().add(end);
+		if(!end.getAdjacents().contains(start))end.getAdjacents().add(start);
+		
+		removeNodeEntity(middle);
 	}
 	
 	public void resetCutAvailability() {
 		for (NodeEntity ne : retrievableDataSet.keySet()) {
 			ne.setAvailableForCutConsideration(true);
 		}
+		starts.clear();
+		middles.clear();
+		ends.clear();
 	}
 
 	private void markBunchOfNodesWithStatus(Iterable<NodeEntity> iterable, VisitedStatus status) {

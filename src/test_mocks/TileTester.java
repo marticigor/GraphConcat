@@ -35,7 +35,7 @@ public class TileTester {
 			if (n.getAdjacents() == null) {
 				throw new RuntimeException("testZeroAdj: NULL adj:\n" + n);
 			} else if (n.getAdjacents().size() == 0) {
-				System.err.println("testZeroAdj: ZERO SIZE adj:\n" + n);
+				//System.err.println("testZeroAdj: ZERO SIZE adj:\n" + n);
 				culprits.add(n);
 			}
 		}
