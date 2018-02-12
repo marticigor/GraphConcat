@@ -220,6 +220,7 @@ public class Graph {
 	List <NodeEntity> middles = new LinkedList<NodeEntity>();
 	List <NodeEntity> ends = new LinkedList<NodeEntity>();
 	
+	//https://www.dropbox.com/s/le91saby0n0d7oj/2018-02-10%2016.42.56.jpg?dl=0
 	public void cutUnnecesarryAlignedNodes() {
 	
 		assert(starts.size() == 0);
@@ -247,18 +248,22 @@ public class Graph {
 							start.getLat(), start.getLon());
 					double bearingMidEnd = Bearing.getBearing(middle.getLat(), middle.getLon(),
 							end.getLat(), end.getLon());
-					//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-					//System.out.println("--------bearingMidSt: " + bearingMidSt + " bearingMidEnd: " + bearingMidEnd);
-					//System.out.println("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 					double pointer = bearingMidSt;
 					double pointerOponnent = (pointer + 180) % 360d;
-					//System.out.println("pointer " + pointer);
-					//System.out.println("opponent "+ expectedOponnent);
 					double marginLow = pointerOponnent - (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2.0);
 					double marginUp = pointerOponnent + (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2.0);
+					//piecut
 					double marginLowClipped = Bearing.clipDegrees(marginLow);
 					double marginUpClipped = Bearing.clipDegrees(marginUp);
-					if(bearingMidEnd > marginLowClipped && bearingMidEnd < marginUpClipped) {
+					if(
+							(bearingMidEnd > marginLowClipped && bearingMidEnd < marginUpClipped) ||
+							
+							pointerOpponentBelongsToPiecutIncludingNorth(
+									pointerOponnent,
+									marginLowClipped,
+									marginUpClipped)
+							
+							) {
 						cutOut ++;
 						cutThisRound ++;
 						starts.add(start);
@@ -283,6 +288,33 @@ public class Graph {
 			if(adj.isAvailableForCutConsideration() == false) return false;
 		}
 		return true;
+	}
+	
+	//TODO?
+	//this could be omitted if we give up clipping
+	//and allow angles greater than 360 degrees
+	//https://www.dropbox.com/s/flt67kez10r9xxx/2018-02-12%2018.58.47.jpg?dl=0
+	private boolean pointerOpponentBelongsToPiecutIncludingNorth(
+			
+			double pointerOpponent,
+			double marginLowClipped,
+			double marginUpClipped) {
+		
+		//do my pie includes north?
+		if(marginUpClipped < marginLowClipped) {
+			double marginUpUnclipped = 360.0 + marginUpClipped;
+			double pointerOpponentUnclipped;
+			if(pointerOpponent < DIFF_ANGLE_BEARING_TO_NODES_CUT) {
+				pointerOpponentUnclipped  = 360.0 + pointerOpponent;
+			} else {
+				pointerOpponentUnclipped = pointerOpponent;
+			}
+			if((pointerOpponentUnclipped > marginLowClipped) &&
+					(pointerOpponentUnclipped <	marginUpUnclipped)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private void performCut(NodeEntity start, NodeEntity middle, NodeEntity end) {
