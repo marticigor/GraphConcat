@@ -41,8 +41,8 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/okoliPrahyII";
-	private final static String NAME = "test_project";
+	private final static String PATH = "/home/radim/shutter_shots/okoliPrahy";
+	private final static String NAME = "jih_od_prahy";
 	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_CYCLE;
 	public static final String DESRIPTION = "testing basic cycling routing where I live";
 	//===========================================================================
@@ -116,12 +116,12 @@ public class App {
 		fixDataset("< after prune DataSet completed >");
 		
 		//perform aligned nodes not necessary transform n-times
-		int n = 20;
-		for(int i = 0; i < n; i++) {
-			graph.cutUnnecesarryAlignedNodes();
-			graph.resetCutAvailability();
-		}
-		fixDataset("< after cut DataSet completed >");
+		//int n = 20;
+		//for(int i = 0; i < n; i++) {
+			//graph.cutUnnecesarryAlignedNodes();
+			//graph.resetCutAvailability();
+		//}
+		//fixDataset("< after cut DataSet completed >");
 		
 		graph.computeEdgeSizeAfterCut();
 		
@@ -144,13 +144,13 @@ public class App {
 
 		// now clustering
 
-		Clustering clustering = new Clustering(graph, this);
-		long clusteringStart = System.currentTimeMillis();
-		clustering.doInit();
-		clustering.clusterize();
-		long clusteringFinish = System.currentTimeMillis();
-		System.out.println("\n\nClustering time: " + clusteringFinish +
-		clusteringStart);
+		//Clustering clustering = new Clustering(graph, this);
+		//long clusteringStart = System.currentTimeMillis();
+		//clustering.doInit();
+		//clustering.clusterize();
+		//long clusteringFinish = System.currentTimeMillis();
+		//System.out.println("\n\nClustering time: " + clusteringFinish +
+		//clusteringStart);
 
 		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
