@@ -68,7 +68,7 @@ public class WriteOutputFiles {
 		bw.write(bounds);
 		bw.newLine();
 		// write graphStats
-		String stats = graph.getDatasetSize() + SEP + graph.getEdgeSizeAfterPrune();
+		String stats = graph.getDatasetSize() + SEP + graph.getEdgeSizeAfterCut();
 		bw.write(stats);
 		bw.newLine();
 		// write routing type
