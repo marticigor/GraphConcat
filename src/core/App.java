@@ -144,13 +144,13 @@ public class App {
 
 		// now clustering
 
-		Clustering clustering = new Clustering(graph, this);
-		long clusteringStart = System.currentTimeMillis();
-		clustering.doInit();
-		clustering.clusterize();
-		long clusteringFinish = System.currentTimeMillis();
-		System.out.println("\n\nClustering time: " + clusteringFinish +
-		clusteringStart);
+		//Clustering clustering = new Clustering(graph, this);
+		//long clusteringStart = System.currentTimeMillis();
+		//clustering.doInit();
+		//clustering.clusterize();
+		//long clusteringFinish = System.currentTimeMillis();
+		//System.out.println("\n\nClustering time: " + clusteringFinish +
+		//clusteringStart);
 
 		if (DEVELOPMENT) {
 			computeBoundsOfExistingNodes(graph);
