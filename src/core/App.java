@@ -1,18 +1,25 @@
 package core;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import building_blocks.DEMReader;
 import building_blocks.DEMTile;
 import building_blocks.Graph;
+import building_blocks.OutputXml;
 import building_blocks.Tile;
+import building_blocks.Trackpoint;
 import building_blocks.WriteOutputFiles;
 import building_blocks.clustering.Clustering;
 import entity.DB_names;
@@ -41,10 +48,10 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/okoliPrahy";
-	private final static String NAME = "jih_od_prahy";
-	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_CYCLE;
-	public static final String DESRIPTION = "testing basic cycling routing where I live";
+	private final static String PATH = "/home/radim/shutter_shots/BreconBeaconsHikeWest";
+	private final static String NAME = "BreconBeaconsHikeWest";
+	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_FOOT_01;
+	public static final String DESRIPTION = "west part";
 	//===========================================================================
 	
 	public final static boolean DEVELOPMENT = false;
@@ -231,9 +238,44 @@ public class App {
 			e.printStackTrace();
 			throw new RuntimeException("write");
 		}
+		
+		//write gpx file visualizing bounds
+		Trackpoint NW = new Trackpoint(maxLat, minLon, (short)0);
+		Trackpoint NE = new Trackpoint(maxLat, maxLon, (short)0);
+		Trackpoint SE = new Trackpoint(minLat, maxLon, (short)0);
+		Trackpoint SW = new Trackpoint(minLat, minLon, (short)0);
+		List<Trackpoint> track = new LinkedList<>();
+		track.add(NW);
+		track.add(NE);
+		track.add(SE);
+		track.add(SW);
+		track.add(NW);
+		
+		OutputXml output = new OutputXml(track, "bounds_" + NAME,
+				PATH + File.separator + NAME + File.separator + "bounds.gpx");
+		try {
+			output.composeOutputDoc();
+			output.writeOutputFile();
+		} catch (ParserConfigurationException e) {
+			// do nothing, better finish job
+			e.printStackTrace();
+		} catch (TransformerException e) {
+			// do nothing, better finish job
+			e.printStackTrace();
+		}
+		
+		
 		System.out.println("FINISHED");
 	}// compose
 
+	
+	
+	
+	
+	
+	
+	
+	
 	private void fixDataset(String stageOfAlgo) {
 		System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++");
 		System.out.println("fixDataset, stage: " + stageOfAlgo);
