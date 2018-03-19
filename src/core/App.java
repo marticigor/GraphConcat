@@ -48,10 +48,10 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/BreconBeaconsHikeWest/BreconBeaconsHikeWestFixed";//BreconBeaconsHikeWest
-	private final static String NAME = "BreconBeaconsHikeWestFixed";
+	private final static String PATH = "/home/radim/shutter_shots/SnowdoniaHikeSouth";//BreconBeaconsHikeWest
+	private final static String NAME = "SnowdoniaHikeSouth";
 	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_FOOT_01;
-	public static final String DESRIPTION = "west part";
+	public static final String DESRIPTION = "south part";
 	//===========================================================================
 	
 	public final static boolean DEVELOPMENT = false;
@@ -252,7 +252,7 @@ public class App {
 		track.add(NW);
 		
 		OutputXml output = new OutputXml(track, "bounds_" + NAME,
-				PATH + File.separator + NAME + File.separator + "bounds.gpx");
+				PATH + File.separator + NAME + File.separator + NAME+"_bounds.gpx");
 		try {
 			output.composeOutputDoc();
 			output.writeOutputFile();
