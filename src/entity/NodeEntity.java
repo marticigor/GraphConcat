@@ -50,6 +50,8 @@ public class NodeEntity implements Comparable<NodeEntity> {
 	// not used so far
 	private transient boolean needsElevCorr = false;
 	private transient boolean availableForCutConsideration = true;
+	public transient boolean isCentroid = false;
+	public transient double cartesianDistFromSelectedPoints = Double.MAX_VALUE;
 
 	// very very important
 	private static final transient int HASHCODE_MULTIPLICATION_LON_LAT = 10000;

@@ -13,20 +13,21 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import building_blocks.Graph;
+import building_blocks.clustering.utils.ClipToRGBVisible;
 import core.App;
 import entity.NodeEntity;
+import ifaces.Clusterizer;
 import lib_duke.ImageResource;
 import lib_duke.Pixel;
 import utils.geospatial.Haversine;
 
-public class Clustering {
+public class Clustering implements Clusterizer {
 
 	private Graph graph;
 	private App app;
 	private int numberClusters;
 	private static final int EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR = 256;
 	private final double excludeThreshold;
-	private static final int CLUSTER_SIZE_DIVISOR = 15;
 	// to prevent out of memory error for these extremely dense an big graphs;
 	private static final double MAX_EDGE_DISTANCE = 120.0;
 
@@ -47,9 +48,10 @@ public class Clustering {
 		double spanLon = app.maxLon - app.minLon;
 		double span = (spanLat + spanLon) / 2;
 		this.excludeThreshold = span / EXCLUDE_FROM_COMPARISON_IMMEDIATELLY_DIVISOR;
-		this.numberClusters = graph.getDatasetSize() / CLUSTER_SIZE_DIVISOR;
+		this.numberClusters = graph.getDatasetSize() / IdWrapper.CLUSTER_SIZE_DIVISOR;
 	}
 
+	@Override
 	public void doInit() {
 
 		System.out.println("\n\nCLUSTERING\n -- doInitStart");
@@ -148,6 +150,7 @@ public class Clustering {
 	/**
 	 * Kruskal
 	 */
+	@Override
 	public void clusterize() {
 		System.out.println("\n\nKruskal start");
 		System.out.println("Number of clusters expected: " + numberClusters);
@@ -251,14 +254,15 @@ public class Clustering {
 		}
 	}
 
-	private void visualizeClusters() {
+	@Override
+	public void visualizeClusters() {
 		ImageResource ir = new ImageResource(App.PIC_WIDTH_MAX_INDEX + 1, App.PIC_HEIGHT_MAX_INDEX + 1);
 		Random random = new Random();
 		ir.draw();
 		for (IdWrapper wrapper : forest) {
-			int R = clipToBounds(random.nextInt(255));
-			int G = clipToBounds(random.nextInt(255));
-			int B = clipToBounds(random.nextInt(255));
+			int R = ClipToRGBVisible.clipToBounds(random.nextInt(255));
+			int G = ClipToRGBVisible.clipToBounds(random.nextInt(255));
+			int B = ClipToRGBVisible.clipToBounds(random.nextInt(255));
 			for (Point p : wrapper.disjointSet) {
 				Pixel pix = ir.getPixel(app.convertLonToPixX(p.lon), app.convertLatToPixY(p.lat));
 				pix.setRed(R);
@@ -267,16 +271,6 @@ public class Clustering {
 			}
 		}
 		ir.draw();
-	}
-
-	private int clipToBounds(int value) {
-		int upper = 255;
-		int lower = 100;
-		if (value > upper)
-			return upper;
-		if (value < lower)
-			return lower;
-		return value;
 	}
 
 	// --------------------------------------------------------------------------------------------------
@@ -338,69 +332,6 @@ public class Clustering {
 				e.printStackTrace();
 				throw new RuntimeException("HALT IN CLUSTERING - calling barrier.await()");
 			}
-		}
-	}
-
-	// --------------------------------------------------------------------------------------------------
-
-	private class Point {
-		private final double lon;
-		private final double lat;
-		private IdWrapper wrapper;
-		private NodeEntity n;
-
-		private Point(IdWrapper wrapper, NodeEntity n) {
-			this.lat = n.getLat();
-			this.lon = n.getLon();
-			this.wrapper = wrapper;
-			this.n = n;
-		}
-
-		private void setWrapper(IdWrapper w) {
-			this.wrapper = w;
-		}
-
-		public String toString() {
-			return "< lon: " + lon + ", lat: " + lat + " >" + " wrapper id: " + wrapper.idRepresentative + "NodeEntity "
-					+ n.toString();
-		}
-	}
-
-	private class Edge implements Comparable<Edge> {
-		private final Point p1;
-		private final Point p2;
-		private final double distance;
-
-		private Edge(Point p1, Point p2, double dist) {
-			this.p1 = p1;
-			this.p2 = p2;
-			this.distance = dist;
-		}
-
-		public int compareTo(Edge theOther) {
-			if (this.distance > theOther.distance)
-				return 1;
-			else if (this.distance < theOther.distance)
-				return -1;
-			else
-				return 0;
-		}
-
-		public String toString() {
-			return p1.toString() + " | " + p2.toString() + " | dist: " + this.distance;
-		}
-	}
-
-	private class IdWrapper {
-		private Set<Point> disjointSet;
-		private long idRepresentative;
-
-		public String toString() {
-			String returnVal = "----------------- idWrapper: idRepresentative: " + idRepresentative + " | size: "
-					+ disjointSet.size() + "\n";
-			for (Point p : disjointSet)
-				returnVal += "--------------------- " + p.toString();
-			return returnVal;
 		}
 	}
 }

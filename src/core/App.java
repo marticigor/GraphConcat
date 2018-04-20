@@ -22,9 +22,11 @@ import building_blocks.Tile;
 import building_blocks.Trackpoint;
 import building_blocks.WriteOutputFiles;
 import building_blocks.clustering.Clustering;
+import building_blocks.clustering.kClusters;
 import entity.DB_names;
 import entity.NmbShotsEntity;
 import entity.NodeEntity;
+import ifaces.Clusterizer;
 import lib_duke.ImageResource;
 import lib_duke.LineMaker;
 import lib_duke.Pixel;
@@ -48,8 +50,8 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/SnowdoniaHikeSouth";//BreconBeaconsHikeWest
-	private final static String NAME = "SnowdoniaHikeSouth";
+	private final static String PATH = "/home/radim/shutter_shots/BreconBeaconsHikeWestTESTCLUSTERS";//BreconBeaconsHikeWest
+	private final static String NAME = "BreconBeaconsHikeWest";
 	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_FOOT_01;
 	public static final String DESRIPTION = "south part";
 	//===========================================================================
@@ -151,7 +153,7 @@ public class App {
 
 		// now clustering
 
-		Clustering clustering = new Clustering(graph, this);
+		Clusterizer clustering = new kClusters(graph, this);//new Clustering(graph, this);
 		long clusteringStart = System.currentTimeMillis();
 		clustering.doInit();
 		clustering.clusterize();
