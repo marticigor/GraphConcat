@@ -50,8 +50,8 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/BreconBeaconsHikeWestTESTCLUSTERS";//BreconBeaconsHikeWest
-	private final static String NAME = "BreconBeaconsHikeWest";
+	private final static String PATH = "/home/radim/Desktop/tmpCopySambaShare/ParkFarmDoverRide";//BreconBeaconsHikeWest
+	private final static String NAME = "ParkFarmDoverRide";
 	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_FOOT_01;
 	public static final String DESRIPTION = "south part";
 	//===========================================================================

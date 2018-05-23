@@ -15,7 +15,7 @@
       <!-- Assume heatMapTest is the database name -->
       
       <property name = "hibernate.connection.url">
-         jdbc:mysql://localhost/heatMapTest
+         jdbc:mysql://localhost/heatmaptest
       </property>
       
       <property name = "hibernate.connection.username">
@@ -23,7 +23,7 @@
       </property>
       
       <property name = "hibernate.connection.password">
-         banikvyhrajeligu
+         banickumyjsmestebou
       </property>
       
       <property name="connection.pool_size">
