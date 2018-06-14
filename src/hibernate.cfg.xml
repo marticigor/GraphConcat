@@ -33,6 +33,10 @@
       <property name="hibernate.hbm2ddl.auto">
           validate
       </property>
+      
+      <property name="hibernate.id.new_generator_mappings">
+          false
+      </property>
   
       <!-- Echo all executed SQL to sysout -->
       <property name="show_sql">false</property>

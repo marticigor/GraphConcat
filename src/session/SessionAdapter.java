@@ -2,7 +2,6 @@ package session;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -29,7 +28,6 @@ public class SessionAdapter {
 	private SessionAdapter(){
 		
         Configuration cf = new Configuration().configure("hibernate.cfg.xml");
-        cf.addProperties(getHibernateProperties());
         cf.addAnnotatedClass(entity.NodeEntity.class);
         cf.addAnnotatedClass(entity.NmbShotsEntity.class);
 
@@ -43,13 +41,6 @@ public class SessionAdapter {
 		return myInstance;
 	}
 	
-	//TODO ugly
-    private Properties getHibernateProperties() {
-        Properties properties = new Properties();
-        properties.put("hibernate.id.new_generator_mappings","false");
-        return properties;
-    }
-    
     //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ useful methods finally
     
     /**
