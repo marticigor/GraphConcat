@@ -21,7 +21,6 @@ import building_blocks.OutputXml;
 import building_blocks.Tile;
 import building_blocks.Trackpoint;
 import building_blocks.WriteOutputFiles;
-import building_blocks.clustering.Clustering;
 import building_blocks.clustering.kClusters;
 import entity.DB_names;
 import entity.NmbShotsEntity;
@@ -50,8 +49,8 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/Desktop/tmpCopySambaShare/ParkFarmDoverRide";//BreconBeaconsHikeWest
-	private final static String NAME = "ParkFarmDoverRide";
+	private final static String PATH = "/home/radim/shutter_shots/UK/Thames_ride/";//BreconBeaconsHikeWest
+	private final static String NAME = "Thames_ride";
 	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_FOOT_01;
 	public static final String DESRIPTION = "south part";
 	//===========================================================================
