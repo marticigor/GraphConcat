@@ -63,7 +63,7 @@ public class DEMReader {
 					in.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-					throw new RuntimeException("HALT while closing in");
+					throw new RuntimeException("HALT while closing IN");
 				}
 			}
 			if (bin != null) {
@@ -71,7 +71,7 @@ public class DEMReader {
 					bin.close();
 				} catch (IOException e) {
 					e.printStackTrace();
-					throw new RuntimeException("HALT while closing bin");
+					throw new RuntimeException("HALT while closing BIN");
 				}
 			}
 		}

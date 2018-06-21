@@ -21,7 +21,6 @@ import building_blocks.OutputXml;
 import building_blocks.Tile;
 import building_blocks.Trackpoint;
 import building_blocks.WriteOutputFiles;
-import building_blocks.clustering.Clustering;
 import building_blocks.clustering.kClusters;
 import entity.DB_names;
 import entity.NmbShotsEntity;
