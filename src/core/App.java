@@ -49,10 +49,10 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/UK/Thames_ride/";//BreconBeaconsHikeWest
-	private final static String NAME = "Thames_ride";
-	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_FOOT_01;
-	public static final String DESRIPTION = "south part";
+	private final static String PATH = "/home/radim/shutter_shots/rawUK/Norwich_ride_enhanced";//BreconBeaconsHikeWest
+	private final static String NAME = "Norwich_ride";
+	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_CYCLE;
+	public static final String DESRIPTION = "Norwitch vicinity";
 	//===========================================================================
 	
 	public final static boolean DEVELOPMENT = false;
