@@ -65,7 +65,7 @@ public class Graph {
 			edgeSizeNoMerge += nodeEntityRight.getAdjacents().size();
 
 			if (!retrievableDataSet.containsKey(nodeEntityRight)) {
-				// NOT CONTAINS
+				// DOES NOT CONTAIN
 				retrievableDataSet.put(nodeEntityRight, nodeEntityRight);
 			} else {
 				// DOES CONTAIN
@@ -249,7 +249,7 @@ public class Graph {
 					double bearingMidEnd = Bearing.getBearing(middle.getLat(), middle.getLon(),
 							end.getLat(), end.getLon());
 					double pointer = bearingMidSt;
-					double pointerOponnent = (pointer + 180) % 360d;
+					double pointerOponnent = (pointer + 180d) % 360d;
 					double marginLow = pointerOponnent - (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2.0);
 					double marginUp = pointerOponnent + (DIFF_ANGLE_BEARING_TO_NODES_CUT / 2.0);
 					//piecut

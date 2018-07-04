@@ -156,6 +156,7 @@ public class WriteOutputFiles {
 
 	// write
 
+	@SuppressWarnings("deprecation")
 	private <T extends Number> void writeData(File file, List<T> data) throws IOException {
 		System.out.println("WriteData, writing " + file.toString());
 

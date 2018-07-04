@@ -234,6 +234,7 @@ public class NodeEntity implements Comparable<NodeEntity> {
 		return sb.toString();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public int compareTo(NodeEntity theOther) {
 
