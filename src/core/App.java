@@ -49,8 +49,8 @@ public class App {
 
 	// output
 	//===========================================================================
-	private final static String PATH = "/home/radim/shutter_shots/rawUK/Norwich_ride_enhanced";//BreconBeaconsHikeWest
-	private final static String NAME = "Norwich_ride";
+	private final static String PATH = "/home/radim/shutter_shots/rawUK/PeakDistrictNorth_Ride";//BreconBeaconsHikeWest
+	private final static String NAME = "PeakDistrictNorth_Ride";
 	public static final int TYPE = WriteOutputFiles.VALUE_RTE_TYPE_CYCLE;
 	public static final String DESRIPTION = "Norwitch vicinity";
 	//===========================================================================
